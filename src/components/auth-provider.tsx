@@ -33,8 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!hasKey) {
       // Pre-fill mock user in sandbox mode
       setUser({
-        name: "Alexander Sterling",
-        email: "alexander.sterling@design.io"
+        name: "Demo User",
+        email: "user@mira-ai.com"
       });
     }
   }, []);

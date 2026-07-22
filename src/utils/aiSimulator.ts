@@ -76,7 +76,7 @@ export function simulateCoverLetter(params: SimulatorParams, personal: PersonalI
   const category = getCategory(params.jobTitle);
   const summaries = AI_DATABASE[category].summaries[params.tone];
 
-  return `Dear ${recipient},\n\nI am writing to express my enthusiastic interest in the ${params.jobTitle} position at ${comp}. With my background in this domain and a strong history of executing high-quality projects, I am confident in my capacity to add immediate value to your organization.\n\nAs a professional, I have always prioritized combining technical correctness with strategic goals. ${summaries}\n\nI am eager to bring my capabilities in system building, collaborative troubleshooting, and client delivery to ${comp}. I look forward to discussing how my experience fits your current initiatives.\n\nSincerely,\n\n${personal.name || 'Alexander Sterling'}`;
+  return `Dear ${recipient},\n\nI am writing to express my enthusiastic interest in the ${params.jobTitle} position at ${comp}. With my background in this domain and a strong history of executing high-quality projects, I am confident in my capacity to add immediate value to your organization.\n\nAs a professional, I have always prioritized combining technical correctness with strategic goals. ${summaries}\n\nI am eager to bring my capabilities in system building, collaborative troubleshooting, and client delivery to ${comp}. I look forward to discussing how my experience fits your current initiatives.\n\nSincerely,\n\n${personal.name || '[Your Name]'}`;
 }
 
 export function simulateKeywords(params: SimulatorParams): { matchScore: number; missing: string[]; found: string[] } {

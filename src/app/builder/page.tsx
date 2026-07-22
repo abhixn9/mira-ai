@@ -1066,18 +1066,18 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Full Name</label>
                     <Input 
-                      value={personalInfo.name} 
+                      value={personalInfo.name || ''} 
                       onChange={(e) => handlePersonalInfoChange('name', e.target.value)} 
-                      placeholder="Alexander Sterling" 
+                      placeholder="Enter your full name" 
                     />
                     {errors.name && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.name}</p>}
                   </div>
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Job Title Target</label>
                     <Input 
-                      value={personalInfo.jobTitle} 
+                      value={personalInfo.jobTitle || ''} 
                       onChange={(e) => handlePersonalInfoChange('jobTitle', e.target.value)} 
-                      placeholder="Senior Full Stack Architect" 
+                      placeholder="Enter job title target" 
                     />
                     {errors.jobTitle && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.jobTitle}</p>}
                   </div>
@@ -1086,18 +1086,18 @@ LANGUAGES: ${skills.languages.join(', ')}
                       <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Email</label>
                       <Input 
                         type="email" 
-                        value={personalInfo.email} 
+                        value={personalInfo.email || ''} 
                         onChange={(e) => handlePersonalInfoChange('email', e.target.value)} 
-                        placeholder="name@company.com" 
+                        placeholder="Enter email address" 
                       />
                       {errors.email && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.email}</p>}
                     </div>
                     <div>
                       <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Phone</label>
                       <Input 
-                        value={personalInfo.phone} 
+                        value={personalInfo.phone || ''} 
                         onChange={(e) => handlePersonalInfoChange('phone', e.target.value)} 
-                        placeholder="+1 (555) 019-2834" 
+                        placeholder="Enter phone number" 
                       />
                       {errors.phone && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.phone}</p>}
                     </div>
@@ -1105,9 +1105,9 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Address Location</label>
                     <Input 
-                      value={personalInfo.address} 
+                      value={personalInfo.address || ''} 
                       onChange={(e) => handlePersonalInfoChange('address', e.target.value)} 
-                      placeholder="Manhattan, New York, NY" 
+                      placeholder="Enter location (City, Country)" 
                     />
                   </div>
                   <div>
@@ -1157,7 +1157,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                               }}
                             />
                           </label>
-                          <span className="text-[9px] text-neutral-500 font-medium uppercase">Max 2MB (JPEG, PNG)</span>
+                          <span className="text-[9px] text-neutral-500 uppercase font-bold">Max 2MB (JPEG, PNG)</span>
                         </div>
                       </div>
                     </div>
@@ -1165,21 +1165,21 @@ LANGUAGES: ${skills.languages.join(', ')}
                 </div>
 
                 <div className="pt-4 border-t border-neutral-900 space-y-4">
-                  <h4 className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold">Social Links</h4>
+                  <label className="text-[9px] uppercase font-bold tracking-widest text-neutral-400 block">Social Links</label>
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">LinkedIn URL</label>
                     <Input 
-                      value={personalInfo.linkedin} 
+                      value={personalInfo.linkedin || ''} 
                       onChange={(e) => handlePersonalInfoChange('linkedin', e.target.value)} 
-                      placeholder="linkedin.com/in/alex-sterling" 
+                      placeholder="linkedin.com/in/yourname" 
                     />
                   </div>
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">GitHub URL</label>
                     <Input 
-                      value={personalInfo.github} 
+                      value={personalInfo.github || ''} 
                       onChange={(e) => handlePersonalInfoChange('github', e.target.value)} 
-                      placeholder="github.com/alexsterling" 
+                      placeholder="github.com/yourusername" 
                     />
                   </div>
                 </div>

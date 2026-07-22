@@ -351,9 +351,9 @@ export default function LoginPage() {
                     initial: 'V'
                   },
                   {
-                    name: 'Alexander Sterling',
-                    email: 'alex.sterling@gmail.com',
-                    initial: 'A'
+                    name: 'Demo User',
+                    email: 'demo.user@gmail.com',
+                    initial: 'D'
                   }
                 ].map((account, idx) => (
                   <button

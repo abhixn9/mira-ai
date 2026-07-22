@@ -378,15 +378,15 @@ ${body}
               <div className="border-b pb-4 flex justify-between items-end">
                 <div>
                   <h2 className="text-xl font-bold tracking-tight uppercase">
-                    {activeResume?.personalInfo.name || 'Alexander Sterling'}
+                    {activeResume?.personalInfo.name || 'Your Name'}
                   </h2>
                   <p className="text-xs text-neutral-500 uppercase tracking-wider font-semibold mt-0.5">
-                    {activeResume?.personalInfo.jobTitle || 'Senior Architect'}
+                    {activeResume?.personalInfo.jobTitle || 'Target Role'}
                   </p>
                 </div>
                 <div className="text-right text-[10px] text-neutral-500 font-semibold space-y-0.5">
-                  <p>{activeResume?.personalInfo.email || 'alexander.sterling@design.io'}</p>
-                  <p>{activeResume?.personalInfo.phone || '+1 (555) 019-2834'}</p>
+                  <p>{activeResume?.personalInfo.email || 'email@example.com'}</p>
+                  <p>{activeResume?.personalInfo.phone || 'Phone Number'}</p>
                 </div>
               </div>
 
@@ -415,7 +415,7 @@ ${body}
               <div className="pt-8 space-y-4">
                 <p className="text-neutral-700">Sincerely,</p>
                 <div className="pt-4 font-bold text-neutral-900">
-                  {activeResume?.personalInfo.name || 'Alexander Sterling'}
+                  {activeResume?.personalInfo.name || 'Your Name'}
                 </div>
               </div>
 

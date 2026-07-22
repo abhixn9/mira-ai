@@ -2236,8 +2236,8 @@ Qualifications:
                         )}
 
                         <div className="text-center space-y-1">
-                          <h4 className="text-lg font-black text-white">{activeResume.personalInfo?.name || 'Alexander Sterling'}</h4>
-                          <p className="text-[9px] font-sans text-neutral-550 uppercase tracking-widest">{activeResume.personalInfo?.email || 'alexander@vercel.com'} &bull; {activeResume.personalInfo?.phone || '(555) 019-2834'}</p>
+                          <h4 className="text-lg font-black text-white">{activeResume.personalInfo?.name || 'Your Name'}</h4>
+                          <p className="text-[9px] font-sans text-neutral-550 uppercase tracking-widest">{activeResume.personalInfo?.email || 'Email Address'} &bull; {activeResume.personalInfo?.phone || 'Phone Number'}</p>
                         </div>
 
                         <div className="space-y-1.5 pt-2 border-t border-neutral-900 relative">

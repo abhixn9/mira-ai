@@ -92,13 +92,13 @@ export default function ResumeParserPage() {
         title: `Parsed - ${name}`,
         updatedAt: new Date().toISOString(),
         personalInfo: {
-          name: name.includes('Resume') ? 'Alexander Sterling' : name,
-          jobTitle: 'Senior Software Engineer',
-          email: 'alexander.sterling@design.io',
-          phone: '+1 (555) 019-2834',
-          linkedin: 'linkedin.com/in/alex-sterling',
-          github: 'github.com/alexsterling',
-          address: 'Manhattan, New York, NY'
+          name: name.replace(/Resume/gi, '').trim() || 'Parsed User',
+          jobTitle: 'Software Engineer',
+          email: 'user@example.com',
+          phone: '',
+          linkedin: '',
+          github: '',
+          address: ''
         },
         summary: 'Experienced Senior Engineer specializing in building design-centric, high-performance web systems using React, Next.js, and TypeScript. Broad expertise in cloud deployments and micro-frontends.',
         experience: [

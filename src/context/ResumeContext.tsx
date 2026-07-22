@@ -125,7 +125,24 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         try {
           const parsed = JSON.parse(storedResumes);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            setResumes(parsed);
+            const sanitized = parsed.map((r: any) => {
+              if (r.personalInfo) {
+                if (r.personalInfo.name === 'Alexander Sterling' || r.personalInfo.name === 'Guest Demo' || r.personalInfo.name === 'Demo User') {
+                  r.personalInfo.name = '';
+                }
+                if (r.personalInfo.email === 'alexander@vercel.com' || r.personalInfo.email === 'guest@mira-ai.com' || r.personalInfo.email === 'alexander.sterling@design.io') {
+                  r.personalInfo.email = '';
+                }
+                if (r.personalInfo.phone === '(555) 019-2834' || r.personalInfo.phone === '+15550192834') {
+                  r.personalInfo.phone = '';
+                }
+                if (r.personalInfo.address === 'San Francisco, CA' || r.personalInfo.address === 'Manhattan, New York, NY') {
+                  r.personalInfo.address = '';
+                }
+              }
+              return r;
+            });
+            setResumes(sanitized);
           } else {
             setResumes([DEFAULT_RESUME]);
           }
