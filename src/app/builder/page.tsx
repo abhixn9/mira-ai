@@ -351,25 +351,34 @@ export default function BuilderPage() {
     let isValid = true;
 
     if (currentStep === 1) {
-      if (!personalInfo.name.trim()) {
+      const name = (localPersonalInfo.name || '').trim();
+      const jobTitle = (localPersonalInfo.jobTitle || '').trim();
+      const email = (localPersonalInfo.email || '').trim();
+      const phone = (localPersonalInfo.phone || '').trim();
+
+      if (!name) {
         newErrors.name = "Full name is required.";
         isValid = false;
       }
-      if (!personalInfo.jobTitle.trim()) {
+      if (!jobTitle) {
         newErrors.jobTitle = "Job title target is required.";
         isValid = false;
       }
-      if (!personalInfo.email.trim()) {
+      if (!email) {
         newErrors.email = "Email address is required.";
         isValid = false;
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email)) {
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         newErrors.email = "Please specify a valid email address.";
         isValid = false;
       }
-      if (!personalInfo.phone.trim()) {
+      if (!phone) {
         newErrors.phone = "Phone number is required.";
         isValid = false;
       }
+
+      updateResume({
+        personalInfo: localPersonalInfo
+      });
     }
 
     if (currentStep === 2) {
@@ -508,6 +517,7 @@ export default function BuilderPage() {
       photo: ''
     };
     setLocalPersonalInfo(emptyInfo);
+    setErrors({});
     updateResume({
       personalInfo: emptyInfo,
       summary: '',
@@ -579,15 +589,27 @@ export default function BuilderPage() {
       [field]: value
     };
     setLocalPersonalInfo(updated);
+    
+    // Dynamically clear validation error for this field as soon as user types
+    setErrors(prev => {
+      if (!prev[field as keyof ValidationErrors]) return prev;
+      const copy = { ...prev };
+      delete copy[field as keyof ValidationErrors];
+      return copy;
+    });
+
     updateResume({
-      personalInfo: {
-        ...personalInfo,
-        ...updated
-      }
+      personalInfo: updated
     });
   };
 
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setErrors(prev => {
+      if (!prev.summary) return prev;
+      const copy = { ...prev };
+      delete copy.summary;
+      return copy;
+    });
     updateResume({ summary: e.target.value });
   };
 
