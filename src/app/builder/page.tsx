@@ -1144,7 +1144,7 @@ LANGUAGES: ${skills.languages.join(', ')}
       </nav>
 
       {/* Mobile View Switcher Bar (Visible on mobile/tablet screens < 1024px) */}
-      <div className="lg:hidden flex items-center justify-center p-2.5 bg-neutral-950 border-b border-neutral-900 sticky top-[73px] z-20">
+      <div className="no-print print:hidden lg:hidden flex items-center justify-center p-2.5 bg-neutral-950 border-b border-neutral-900 sticky top-[73px] z-20">
         <div className="flex items-center p-1 bg-neutral-900 rounded-xl border border-neutral-800 text-xs font-bold w-full max-w-xs justify-between">
           <button
             type="button"

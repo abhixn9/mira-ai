@@ -101,12 +101,14 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
 
   const rawExp = (data.experience || []).map(exp => ({
     ...exp,
+    company: exp.company || (exp as any).title || '',
+    role: exp.role || (exp as any).title || '',
     responsibilities: (exp.responsibilities || []).filter(r => r && r.trim() !== ""),
     achievements: (exp.achievements || []).filter(a => a && a.trim() !== "")
-  })).filter(exp => exp.company?.trim() !== "" || exp.role?.trim() !== "");
+  })).filter(exp => (exp.company && exp.company.trim() !== "") || (exp.role && exp.role.trim() !== "") || (exp.responsibilities && exp.responsibilities.length > 0));
   const experience = rawExp;
 
-  const rawEdu = (data.education || []).filter(edu => edu.university?.trim() !== "" || edu.degree?.trim() !== "");
+  const rawEdu = (data.education || []).filter(edu => (edu.university && edu.university.trim() !== "") || (edu.degree && edu.degree.trim() !== "") || (edu.location && edu.location.trim() !== ""));
   const education = rawEdu;
 
   const rawSkills = {
@@ -116,10 +118,10 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
   };
   const skills = rawSkills;
 
-  const rawCert = (data.certifications || []).filter(c => c.name?.trim() !== "");
+  const rawCert = (data.certifications || []).filter(c => (c.name && c.name.trim() !== "") || (c.issuer && c.issuer.trim() !== ""));
   const certifications = rawCert;
 
-  const rawProj = (data.projects || []).filter(p => p.title?.trim() !== "");
+  const rawProj = (data.projects || []).filter(p => (p.title && p.title.trim() !== "") || (p.description && p.description.trim() !== ""));
   const projects = rawProj;
 
   // Font families mapping
@@ -1165,6 +1167,36 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
                     <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-200 text-[9px] px-2 py-0.5 rounded-full font-medium">
                       {s}
                     </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Soft Skills & Languages */}
+            {(skills.soft.length > 0 || skills.languages.length > 0) && (
+              <div className="space-y-3">
+                <h4 className="text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-800 pb-1">Skills &amp; Languages</h4>
+                <div className="space-y-2 text-[10px] text-neutral-300">
+                  {skills.soft.length > 0 && (
+                    <div><strong className="text-neutral-400">Soft Skills:</strong> {skills.soft.join(', ')}</div>
+                  )}
+                  {skills.languages.length > 0 && (
+                    <div><strong className="text-neutral-400">Languages:</strong> {skills.languages.join(', ')}</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Certifications */}
+            {certifications.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-[9px] font-black uppercase tracking-widest text-neutral-500 border-b border-neutral-800 pb-1">Certifications</h4>
+                <div className="space-y-1 text-[10px] text-neutral-300">
+                  {certifications.map((c) => (
+                    <div key={c.id} className="leading-snug">
+                      <div className="font-bold text-white">{c.name}</div>
+                      {c.issuer && <div className="text-[9px] text-neutral-400">{c.issuer} {c.year ? `(${c.year})` : ''}</div>}
+                    </div>
                   ))}
                 </div>
               </div>
