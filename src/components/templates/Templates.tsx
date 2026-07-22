@@ -83,45 +83,53 @@ const SAMPLE_FALLBACK = {
 };
 
 export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data }, ref) => {
-  const { style } = data;
-
-  const personalInfo = {
-    name: data.personalInfo?.name || '',
-    jobTitle: data.personalInfo?.jobTitle || '',
-    email: data.personalInfo?.email || '',
-    phone: data.personalInfo?.phone || '',
-    address: data.personalInfo?.address || '',
-    linkedin: data.personalInfo?.linkedin || '',
-    github: data.personalInfo?.github || '',
-    portfolio: data.personalInfo?.portfolio || '',
-    photo: data.personalInfo?.photo || ''
+  const safeData = data || SAMPLE_FALLBACK;
+  const style = safeData.style || SAMPLE_FALLBACK.style || {
+    templateId: 'modern',
+    primaryColor: '#8b5cf6',
+    fontFamily: 'sans',
+    fontSize: 'md',
+    lineSpacing: 'md',
+    pageMargin: 'md'
   };
 
-  const summary = data.summary || '';
+  const personalInfo = {
+    name: safeData.personalInfo?.name || '',
+    jobTitle: safeData.personalInfo?.jobTitle || '',
+    email: safeData.personalInfo?.email || '',
+    phone: safeData.personalInfo?.phone || '',
+    address: safeData.personalInfo?.address || '',
+    linkedin: safeData.personalInfo?.linkedin || '',
+    github: safeData.personalInfo?.github || '',
+    portfolio: safeData.personalInfo?.portfolio || '',
+    photo: safeData.personalInfo?.photo || ''
+  };
 
-  const rawExp = (data.experience || []).map(exp => ({
+  const summary = safeData.summary || '';
+
+  const rawExp = (safeData.experience || []).map(exp => ({
     ...exp,
-    company: exp.company || (exp as any).title || '',
-    role: exp.role || (exp as any).title || '',
-    responsibilities: (exp.responsibilities || []).filter(r => r && r.trim() !== ""),
-    achievements: (exp.achievements || []).filter(a => a && a.trim() !== "")
-  })).filter(exp => (exp.company && exp.company.trim() !== "") || (exp.role && exp.role.trim() !== "") || (exp.responsibilities && exp.responsibilities.length > 0));
+    company: exp?.company || (exp as any)?.title || '',
+    role: exp?.role || (exp as any)?.title || '',
+    responsibilities: Array.isArray(exp?.responsibilities) ? exp.responsibilities.filter(r => r && typeof r === 'string' && r.trim() !== "") : [],
+    achievements: Array.isArray(exp?.achievements) ? exp.achievements.filter(a => a && typeof a === 'string' && a.trim() !== "") : []
+  })).filter(exp => exp && ((exp.company && exp.company.trim() !== "") || (exp.role && exp.role.trim() !== "") || (exp.responsibilities && exp.responsibilities.length > 0)));
   const experience = rawExp;
 
-  const rawEdu = (data.education || []).filter(edu => (edu.university && edu.university.trim() !== "") || (edu.degree && edu.degree.trim() !== "") || (edu.location && edu.location.trim() !== ""));
+  const rawEdu = (safeData.education || []).filter(edu => edu && ((edu.university && edu.university.trim() !== "") || (edu.degree && edu.degree.trim() !== "") || (edu.location && edu.location.trim() !== "")));
   const education = rawEdu;
 
   const rawSkills = {
-    technical: (data.skills?.technical || []).filter(s => s && s.trim() !== ""),
-    soft: (data.skills?.soft || []).filter(s => s && s.trim() !== ""),
-    languages: (data.skills?.languages || []).filter(s => s && s.trim() !== "")
+    technical: Array.isArray(safeData.skills?.technical) ? safeData.skills.technical.filter(s => s && typeof s === 'string' && s.trim() !== "") : [],
+    soft: Array.isArray(safeData.skills?.soft) ? safeData.skills.soft.filter(s => s && typeof s === 'string' && s.trim() !== "") : [],
+    languages: Array.isArray(safeData.skills?.languages) ? safeData.skills.languages.filter(s => s && typeof s === 'string' && s.trim() !== "") : []
   };
   const skills = rawSkills;
 
-  const rawCert = (data.certifications || []).filter(c => (c.name && c.name.trim() !== "") || (c.issuer && c.issuer.trim() !== ""));
+  const rawCert = (safeData.certifications || []).filter(c => c && ((c.name && c.name.trim() !== "") || (c.issuer && c.issuer.trim() !== "")));
   const certifications = rawCert;
 
-  const rawProj = (data.projects || []).filter(p => (p.title && p.title.trim() !== "") || (p.description && p.description.trim() !== ""));
+  const rawProj = (safeData.projects || []).filter(p => p && ((p.title && p.title.trim() !== "") || (p.description && p.description.trim() !== "")));
   const projects = rawProj;
 
   // Font families mapping

@@ -266,19 +266,21 @@ export default function BuilderPage() {
   }, [activeResume?.id]);
 
   const livePreviewData = useMemo(() => {
-    if (!activeResume) return DEFAULT_RESUME;
+    const active = activeResume || DEFAULT_RESUME;
     return {
-      ...activeResume,
+      ...active,
+      style: active.style || DEFAULT_RESUME.style,
       personalInfo: {
-        ...activeResume.personalInfo,
-        ...localPersonalInfo
+        ...(DEFAULT_RESUME.personalInfo || {}),
+        ...(active.personalInfo || {}),
+        ...(localPersonalInfo || {})
       },
-      summary: localSummary,
-      experience: localExperience,
-      education: localEducation,
-      skills: localSkills,
-      projects: localProjects,
-      certifications: localCertifications
+      summary: localSummary ?? '',
+      experience: localExperience || [],
+      education: localEducation || [],
+      skills: localSkills || { technical: [], soft: [], languages: [] },
+      projects: localProjects || [],
+      certifications: localCertifications || []
     };
   }, [activeResume, localPersonalInfo, localSummary, localExperience, localEducation, localSkills, localProjects, localCertifications]);
 
