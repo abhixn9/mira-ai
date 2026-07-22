@@ -466,6 +466,79 @@ export default function BuilderPage() {
     setStep(prev => Math.max(1, prev - 1));
   };
 
+  const handleClearAllData = () => {
+    updateResume({
+      personalInfo: {
+        name: '',
+        jobTitle: '',
+        email: '',
+        phone: '',
+        linkedin: '',
+        github: '',
+        portfolio: '',
+        address: '',
+        photo: ''
+      },
+      summary: '',
+      experience: [],
+      education: [],
+      skills: { technical: [], soft: [], languages: [] },
+      certifications: [],
+      projects: [],
+      awards: []
+    });
+    toast("Form cleared! Start entering your details.", "success");
+  };
+
+  const handleLoadSampleData = () => {
+    updateResume({
+      personalInfo: {
+        name: 'Alexander Sterling',
+        jobTitle: 'Senior Software Engineer',
+        email: 'alexander@example.com',
+        phone: '(555) 019-2834',
+        linkedin: 'linkedin.com/in/alexander',
+        github: 'github.com/alexander',
+        portfolio: 'alexander.dev',
+        address: 'San Francisco, CA',
+        photo: ''
+      },
+      summary: 'Results-oriented Senior Software Engineer with 6+ years of experience architecting web applications, designing developer tools, and optimizing cloud serverless infrastructure.',
+      experience: [
+        {
+          id: 'exp-1',
+          title: 'Lead Software Engineer',
+          company: 'Vercel',
+          location: 'San Francisco, CA',
+          startDate: '2023-01',
+          endDate: 'Present',
+          current: true,
+          description: '• Architected serverless deployments on Vercel platforms, reducing cold starts by 42%.\n• Spearheaded micro-frontend migration across core enterprise client apps.'
+        }
+      ],
+      education: [
+        {
+          id: 'edu-1',
+          degree: 'B.S. in Computer Science & Engineering',
+          institution: 'UC Berkeley',
+          location: 'Berkeley, CA',
+          startDate: '2016-08',
+          endDate: '2020-05',
+          gpa: '3.9'
+        }
+      ],
+      skills: {
+        technical: ['React', 'Next.js', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
+        soft: ['Technical Leadership', 'System Architecture'],
+        languages: ['English (Native)']
+      },
+      certifications: [],
+      projects: [],
+      awards: []
+    });
+    toast("Sample data loaded into workspace.", "success");
+  };
+
   // Form Field change handlers
   const handlePersonalInfoChange = (field: keyof typeof personalInfo, value: string) => {
     updateResume({
@@ -968,6 +1041,27 @@ LANGUAGES: ${skills.languages.join(', ')}
             {/* STEP 1: Personal Info */}
             {step === 1 && (
               <div className="space-y-6 text-left">
+                {/* Form Control Toolbar */}
+                <div className="flex items-center justify-between p-3 bg-neutral-900/60 border border-neutral-850 rounded-xl mb-4 text-xs">
+                  <span className="text-neutral-400 font-bold uppercase text-[9px] tracking-wider">Form Controls</span>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={handleClearAllData}
+                      className="px-2.5 py-1.5 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-900/40 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      Clear Form
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLoadSampleData}
+                      className="px-2.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      Load Demo Sample
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Full Name</label>

@@ -38,74 +38,30 @@ interface ResumeContextType {
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 const DEFAULT_RESUME: ResumeData = {
-  id: 'sample-resume-id',
-  title: 'Senior Software Engineer Resume',
+  id: 'my-resume-id',
+  title: 'My Resume',
   updatedAt: new Date().toISOString(),
   personalInfo: {
-    name: 'Alexander Sterling',
-    jobTitle: 'Senior Software Engineer / Tech Lead',
-    email: 'alexander@vercel.com',
-    phone: '(555) 019-2834',
-    linkedin: 'linkedin.com/in/alexandersterling',
-    github: 'github.com/alexandersterling',
-    portfolio: 'alexandersterling.dev',
-    address: 'San Francisco, CA'
+    name: '',
+    jobTitle: '',
+    email: '',
+    phone: '',
+    linkedin: '',
+    github: '',
+    portfolio: '',
+    address: '',
+    photo: ''
   },
-  summary: 'Results-oriented Senior Software Engineer with 6+ years of experience architecting web applications, designing developer tools, and optimizing cloud serverless infrastructure at Vercel & Stripe.',
-  experience: [
-    {
-      id: 'exp-1',
-      title: 'Lead Software Engineer',
-      company: 'Vercel',
-      location: 'San Francisco, CA',
-      startDate: '2023-01',
-      endDate: 'Present',
-      current: true,
-      description: '• Architected serverless deployments on Vercel platforms, reducing cold starts by 42%.\n• Spearheaded micro-frontend migration across 14 core enterprise client apps.'
-    },
-    {
-      id: 'exp-2',
-      title: 'Senior Frontend Engineer',
-      company: 'Stripe',
-      location: 'San Francisco, CA',
-      startDate: '2020-06',
-      endDate: '2022-12',
-      current: false,
-      description: '• Shipped merchant dashboards utilizing React, GraphQL, and micro-frontend structures.\n• Improved Core Web Vitals performance scores from 72 to 98 across core payment flows.'
-    }
-  ],
-  education: [
-    {
-      id: 'edu-1',
-      degree: 'B.S. in Computer Science & Engineering',
-      institution: 'UC Berkeley',
-      location: 'Berkeley, CA',
-      startDate: '2016-08',
-      endDate: '2020-05',
-      gpa: '3.9'
-    }
-  ],
+  summary: '',
+  experience: [],
+  education: [],
   skills: {
-    technical: ['React', 'Next.js', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS', 'Docker', 'GraphQL', 'AWS', 'System Design'],
-    soft: ['Technical Leadership', 'Cross-functional Collaboration', 'System Architecture', 'Code Review'],
-    languages: ['English (Native)', 'Spanish (Professional)']
+    technical: [],
+    soft: [],
+    languages: []
   },
-  certifications: [
-    {
-      id: 'cert-1',
-      name: 'AWS Certified Solutions Architect',
-      issuer: 'Amazon Web Services',
-      date: '2024-03'
-    }
-  ],
-  projects: [
-    {
-      id: 'proj-1',
-      title: 'Aether Engine',
-      link: 'github.com/alexandersterling/aether-engine',
-      description: 'High-performance WebGL & Canvas rendering library for real-time data visualizers.'
-    }
-  ],
+  certifications: [],
+  projects: [],
   awards: [],
   style: {
     templateId: 'modern',
@@ -284,36 +240,10 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
 
   const setUserName = (name: string) => {
     setUserNameState(name);
-    if (activeResumeId) {
-      setResumes(prev =>
-        prev.map(r =>
-          r.id === activeResumeId
-            ? {
-                ...r,
-                personalInfo: { ...r.personalInfo, name },
-                updatedAt: new Date().toISOString()
-              }
-            : r
-        )
-      );
-    }
   };
 
   const setUserEmail = (email: string) => {
     setUserEmailState(email);
-    if (activeResumeId) {
-      setResumes(prev =>
-        prev.map(r =>
-          r.id === activeResumeId
-            ? {
-                ...r,
-                personalInfo: { ...r.personalInfo, email },
-                updatedAt: new Date().toISOString()
-              }
-            : r
-        )
-      );
-    }
   };
 
   const activeResume = resumes.find(r => r.id === activeResumeId) || (resumes.length > 0 ? resumes[0] : DEFAULT_RESUME);
