@@ -155,6 +155,15 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
               if (r.summary && (r.summary.includes('Results-oriented Senior Software Engineer') || r.summary.includes('Vercel & Stripe') || r.summary.includes('architecting web applications'))) {
                 r.summary = '';
               }
+              if (Array.isArray(r.experience) && r.experience.some((e: any) => e.company === 'Vercel' || e.company === 'Stripe' || e.company === 'Aether Technologies' || e.title === 'Lead Software Engineer')) {
+                r.experience = [];
+              }
+              if (Array.isArray(r.education) && r.education.some((e: any) => e.institution === 'UC Berkeley' || e.university === 'Massachusetts Institute of Technology' || e.university === 'Boston University')) {
+                r.education = [];
+              }
+              if (r.skills && Array.isArray(r.skills.technical) && r.skills.technical.includes('React') && r.skills.technical.includes('Next.js') && r.skills.technical.length === 6) {
+                r.skills = { technical: [], soft: [], languages: [] };
+              }
               return r;
             });
             setResumes(sanitized);

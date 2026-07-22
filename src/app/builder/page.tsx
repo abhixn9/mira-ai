@@ -233,8 +233,13 @@ export default function BuilderPage() {
     portfolio: activeResume?.personalInfo?.portfolio || ''
   });
 
-  // Local Summary buffer state for 100% fluid mobile typing
+  // Local Summary and Array buffer states for 100% fluid mobile touch typing
   const [localSummary, setLocalSummary] = useState(activeResume?.summary || '');
+  const [localExperience, setLocalExperience] = useState(activeResume?.experience || []);
+  const [localEducation, setLocalEducation] = useState(activeResume?.education || []);
+  const [localSkills, setLocalSkills] = useState(activeResume?.skills || { technical: [], soft: [], languages: [] });
+  const [localProjects, setLocalProjects] = useState(activeResume?.projects || []);
+  const [localCertifications, setLocalCertifications] = useState(activeResume?.certifications || []);
 
   useEffect(() => {
     if (activeResume?.personalInfo) {
@@ -252,6 +257,11 @@ export default function BuilderPage() {
     }
     if (activeResume) {
       setLocalSummary(activeResume.summary || '');
+      setLocalExperience(activeResume.experience || []);
+      setLocalEducation(activeResume.education || []);
+      setLocalSkills(activeResume.skills || { technical: [], soft: [], languages: [] });
+      setLocalProjects(activeResume.projects || []);
+      setLocalCertifications(activeResume.certifications || []);
     }
   }, [activeResume?.id]);
 
@@ -263,9 +273,14 @@ export default function BuilderPage() {
         ...activeResume.personalInfo,
         ...localPersonalInfo
       },
-      summary: localSummary
+      summary: localSummary,
+      experience: localExperience,
+      education: localEducation,
+      skills: localSkills,
+      projects: localProjects,
+      certifications: localCertifications
     };
-  }, [activeResume, localPersonalInfo, localSummary]);
+  }, [activeResume, localPersonalInfo, localSummary, localExperience, localEducation, localSkills, localProjects, localCertifications]);
 
   const [aiGenerating, setAiGenerating] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -537,6 +552,11 @@ export default function BuilderPage() {
     };
     setLocalPersonalInfo(emptyInfo);
     setLocalSummary('');
+    setLocalExperience([]);
+    setLocalEducation([]);
+    setLocalSkills({ technical: [], soft: [], languages: [] });
+    setLocalProjects([]);
+    setLocalCertifications([]);
     setErrors({});
     updateResume({
       personalInfo: emptyInfo,
@@ -669,7 +689,7 @@ export default function BuilderPage() {
     }
   };
 
-  // Experience handlers
+  // Experience handlers with local buffer state
   const handleAddExperience = () => {
     const newExp = {
       id: `exp-${Date.now()}`,
@@ -680,33 +700,44 @@ export default function BuilderPage() {
       responsibilities: [''],
       achievements: []
     };
-    updateResume({ experience: [...experience, newExp] });
+    const updated = [...localExperience, newExp];
+    setLocalExperience(updated);
+    setErrors(prev => {
+      if (!prev.experience) return prev;
+      const copy = { ...prev };
+      delete copy.experience;
+      return copy;
+    });
+    updateResume({ experience: updated });
   };
 
   const handleUpdateExperience = (id: string, field: string, value: string | string[]) => {
-    const updated = experience.map(exp => {
+    const updated = localExperience.map(exp => {
       if (exp.id === id) {
         return { ...exp, [field]: value };
       }
       return exp;
     });
+    setLocalExperience(updated);
     updateResume({ experience: updated });
   };
 
   const handleDeleteExperience = (id: string) => {
-    updateResume({ experience: experience.filter(exp => exp.id !== id) });
+    const updated = localExperience.filter(exp => exp.id !== id);
+    setLocalExperience(updated);
+    updateResume({ experience: updated });
     toast("Experience entry deleted.", "info");
   };
 
   const handleAddResp = (expId: string) => {
-    const exp = experience.find(e => e.id === expId);
+    const exp = localExperience.find(e => e.id === expId);
     if (!exp) return;
     const current = exp.responsibilities || [];
     handleUpdateExperience(expId, 'responsibilities', [...current, '']);
   };
 
   const handleUpdateResp = (expId: string, idx: number, val: string) => {
-    const exp = experience.find(e => e.id === expId);
+    const exp = localExperience.find(e => e.id === expId);
     if (!exp) return;
     const current = exp.responsibilities || [];
     const newResps = [...current];
@@ -715,14 +746,14 @@ export default function BuilderPage() {
   };
 
   const handleDeleteResp = (expId: string, idx: number) => {
-    const exp = experience.find(e => e.id === expId);
+    const exp = localExperience.find(e => e.id === expId);
     if (!exp) return;
     const current = exp.responsibilities || [];
     handleUpdateExperience(expId, 'responsibilities', current.filter((_, i) => i !== idx));
   };
 
   const handleEnhanceExperienceBullets = async (expId: string) => {
-    const exp = experience.find(e => e.id === expId);
+    const exp = localExperience.find(e => e.id === expId);
     if (!exp) return;
     const targetTitle = (localPersonalInfo.jobTitle || personalInfo.jobTitle || 'Software Engineer').trim();
     toast("AI is transforming responsibilities...", "info");
@@ -1325,7 +1356,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                 {errors.experience && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.experience}</p>}
 
                 <div className="space-y-6">
-                  {experience.map((exp) => (
+                  {localExperience.map((exp) => (
                     <GlassCard key={exp.id} className="p-5 border border-neutral-900 space-y-4 relative">
                       <button 
                         onClick={() => handleDeleteExperience(exp.id)}
