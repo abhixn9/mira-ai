@@ -615,6 +615,48 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
               </div>
             </div>
           )}
+
+          {education.length > 0 && (
+            <div className="space-y-3">
+              <h2 className={cn("font-mono font-bold uppercase text-purple-600 border-b pb-2", sizeClasses.sectionHeader)}>
+                {"// Education"}
+              </h2>
+              <div className="space-y-2 font-mono text-xs">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between">
+                    <span><strong>{edu.degree}</strong> &mdash; {edu.university} {edu.cgpa && `(CGPA: ${edu.cgpa})`}</span>
+                    <span className="text-neutral-400 text-[10px]">{edu.duration}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0) && (
+            <div className="space-y-3">
+              <h2 className={cn("font-mono font-bold uppercase text-purple-600 border-b pb-2", sizeClasses.sectionHeader)}>
+                {"// Skills & Languages"}
+              </h2>
+              <div className="font-mono text-xs text-neutral-700 space-y-1">
+                {skills.technical.length > 0 && <p><strong>Technical:</strong> {skills.technical.join(', ')}</p>}
+                {skills.soft.length > 0 && <p><strong>Soft:</strong> {skills.soft.join(', ')}</p>}
+                {skills.languages.length > 0 && <p><strong>Languages:</strong> {skills.languages.join(', ')}</p>}
+              </div>
+            </div>
+          )}
+
+          {certifications.length > 0 && (
+            <div className="space-y-3">
+              <h2 className={cn("font-mono font-bold uppercase text-purple-600 border-b pb-2", sizeClasses.sectionHeader)}>
+                {"// Certifications"}
+              </h2>
+              <div className="font-mono text-xs text-neutral-700 space-y-1">
+                {certifications.map((c) => (
+                  <p key={c.id}><strong>{c.name}</strong> {c.issuer && `(${c.issuer})`} {c.year && `&mdash; ${c.year}`}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -670,6 +712,42 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
               </div>
             </div>
           )}
+
+          {education.length > 0 && (
+            <div className="space-y-3 text-left">
+              <h2 className="text-xs uppercase tracking-widest font-bold border-b pb-0.5 border-neutral-100 text-neutral-900 text-center">Education</h2>
+              <div className="space-y-2 font-sans text-xs">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between">
+                    <span><strong>{edu.degree}</strong> &mdash; {edu.university} {edu.cgpa && `(CGPA: ${edu.cgpa})`}</span>
+                    <span className="text-neutral-400 text-[10px]">{edu.duration}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0) && (
+            <div className="space-y-3 text-left">
+              <h2 className="text-xs uppercase tracking-widest font-bold border-b pb-0.5 border-neutral-100 text-neutral-900 text-center">Skills &amp; Languages</h2>
+              <div className="font-sans text-xs text-neutral-700 space-y-1">
+                {skills.technical.length > 0 && <p><strong>Technical:</strong> {skills.technical.join(', ')}</p>}
+                {skills.soft.length > 0 && <p><strong>Soft Skills:</strong> {skills.soft.join(', ')}</p>}
+                {skills.languages.length > 0 && <p><strong>Languages:</strong> {skills.languages.join(', ')}</p>}
+              </div>
+            </div>
+          )}
+
+          {certifications.length > 0 && (
+            <div className="space-y-3 text-left">
+              <h2 className="text-xs uppercase tracking-widest font-bold border-b pb-0.5 border-neutral-100 text-neutral-900 text-center">Certifications</h2>
+              <div className="font-sans text-xs text-neutral-700 space-y-1">
+                {certifications.map((c) => (
+                  <p key={c.id}><strong>{c.name}</strong> {c.issuer && `(${c.issuer})`} {c.year && `&mdash; ${c.year}`}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -717,6 +795,59 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
                     <ul className={cn("list-disc pl-4 text-neutral-600 space-y-1", sizeClasses.body)}>
                       {exp.responsibilities.map((r, i) => <li key={i}>{r}</li>)}
                     </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {education.length > 0 && (
+            <div className="space-y-3">
+              <h2 className={cn("font-bold text-neutral-900 uppercase tracking-widest border-b-2 pb-1 border-neutral-100", sizeClasses.sectionHeader)}>Education</h2>
+              <div className="space-y-2 font-sans text-xs">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between">
+                    <span><strong>{edu.degree}</strong> &mdash; {edu.university} {edu.cgpa && `(CGPA: ${edu.cgpa})`}</span>
+                    <span className="text-neutral-400 text-[10px]">{edu.duration}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0) && (
+            <div className="space-y-3">
+              <h2 className={cn("font-bold text-neutral-900 uppercase tracking-widest border-b-2 pb-1 border-neutral-100", sizeClasses.sectionHeader)}>Skills &amp; Languages</h2>
+              <div className="font-sans text-xs text-neutral-700 space-y-1">
+                {skills.technical.length > 0 && <p><strong>Technical:</strong> {skills.technical.join(', ')}</p>}
+                {skills.soft.length > 0 && <p><strong>Soft Skills:</strong> {skills.soft.join(', ')}</p>}
+                {skills.languages.length > 0 && <p><strong>Languages:</strong> {skills.languages.join(', ')}</p>}
+              </div>
+            </div>
+          )}
+
+          {certifications.length > 0 && (
+            <div className="space-y-3">
+              <h2 className={cn("font-bold text-neutral-900 uppercase tracking-widest border-b-2 pb-1 border-neutral-100", sizeClasses.sectionHeader)}>Certifications</h2>
+              <div className="font-sans text-xs text-neutral-700 space-y-1">
+                {certifications.map((c) => (
+                  <p key={c.id}><strong>{c.name}</strong> {c.issuer && `(${c.issuer})`} {c.year && `&mdash; ${c.year}`}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {projects.length > 0 && (
+            <div className="space-y-3">
+              <h2 className={cn("font-bold text-neutral-900 uppercase tracking-widest border-b-2 pb-1 border-neutral-100", sizeClasses.sectionHeader)}>Projects</h2>
+              <div className="space-y-2 font-sans text-xs">
+                {projects.map((p) => (
+                  <div key={p.id} className="space-y-0.5">
+                    <div className="flex justify-between font-bold text-neutral-800">
+                      <span>{p.title}</span>
+                      {p.link && <span className="font-mono text-[10px] text-neutral-400">{p.link}</span>}
+                    </div>
+                    {p.description && <p className="text-neutral-600 leading-normal">{p.description}</p>}
                   </div>
                 ))}
               </div>
@@ -774,6 +905,42 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
               </div>
             </div>
           )}
+
+          {education.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs uppercase tracking-widest text-purple-400 font-bold print:text-purple-700">Education</h2>
+              <div className="space-y-2 text-xs">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between">
+                    <span><strong>{edu.degree}</strong> &mdash; {edu.university} {edu.cgpa && `(CGPA: ${edu.cgpa})`}</span>
+                    <span className="text-neutral-500 text-[10px]">{edu.duration}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0) && (
+            <div className="space-y-3">
+              <h2 className="text-xs uppercase tracking-widest text-purple-400 font-bold print:text-purple-700">Skills &amp; Languages</h2>
+              <div className="text-xs text-neutral-300 print:text-neutral-700 space-y-1">
+                {skills.technical.length > 0 && <p><strong>Technical:</strong> {skills.technical.join(', ')}</p>}
+                {skills.soft.length > 0 && <p><strong>Soft Skills:</strong> {skills.soft.join(', ')}</p>}
+                {skills.languages.length > 0 && <p><strong>Languages:</strong> {skills.languages.join(', ')}</p>}
+              </div>
+            </div>
+          )}
+
+          {certifications.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs uppercase tracking-widest text-purple-400 font-bold print:text-purple-700">Certifications</h2>
+              <div className="text-xs text-neutral-300 print:text-neutral-700 space-y-1">
+                {certifications.map((c) => (
+                  <p key={c.id}><strong>{c.name}</strong> {c.issuer && `(${c.issuer})`} {c.year && `&mdash; ${c.year}`}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -825,6 +992,42 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
               </div>
             </div>
           )}
+
+          {education.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs uppercase font-extrabold tracking-wider border-b pb-0.5 border-neutral-100">Education</h2>
+              <div className="space-y-2 text-xs">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between">
+                    <span><strong>{edu.degree}</strong> &mdash; {edu.university} {edu.cgpa && `(CGPA: ${edu.cgpa})`}</span>
+                    <span className="text-neutral-400 text-[10px]">{edu.duration}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0) && (
+            <div className="space-y-3">
+              <h2 className="text-xs uppercase font-extrabold tracking-wider border-b pb-0.5 border-neutral-100">Skills &amp; Languages</h2>
+              <div className="text-xs text-neutral-600 space-y-1">
+                {skills.technical.length > 0 && <p><strong>Technical:</strong> {skills.technical.join(', ')}</p>}
+                {skills.soft.length > 0 && <p><strong>Soft Skills:</strong> {skills.soft.join(', ')}</p>}
+                {skills.languages.length > 0 && <p><strong>Languages:</strong> {skills.languages.join(', ')}</p>}
+              </div>
+            </div>
+          )}
+
+          {certifications.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-xs uppercase font-extrabold tracking-wider border-b pb-0.5 border-neutral-100">Certifications</h2>
+              <div className="text-xs text-neutral-600 space-y-1">
+                {certifications.map((c) => (
+                  <p key={c.id}><strong>{c.name}</strong> {c.issuer && `(${c.issuer})`} {c.year && `&mdash; ${c.year}`}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -868,6 +1071,42 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
                       {exp.responsibilities.map((r, i) => <li key={i}>{r}</li>)}
                     </ul>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {education.length > 0 && (
+            <div className="space-y-3 text-left">
+              <h2 className="text-[10px] uppercase tracking-widest font-bold text-yellow-600 text-center">Education</h2>
+              <div className="space-y-2 font-sans text-xs">
+                {education.map((edu) => (
+                  <div key={edu.id} className="flex justify-between">
+                    <span><strong>{edu.degree}</strong> &mdash; {edu.university} {edu.cgpa && `(CGPA: ${edu.cgpa})`}</span>
+                    <span className="font-light text-neutral-400 text-[10px]">{edu.duration}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(skills.technical.length > 0 || skills.soft.length > 0 || skills.languages.length > 0) && (
+            <div className="space-y-3 text-left">
+              <h2 className="text-[10px] uppercase tracking-widest font-bold text-yellow-600 text-center">Skills &amp; Languages</h2>
+              <div className="font-sans text-xs text-neutral-700 space-y-1">
+                {skills.technical.length > 0 && <p><strong>Technical:</strong> {skills.technical.join(', ')}</p>}
+                {skills.soft.length > 0 && <p><strong>Soft Skills:</strong> {skills.soft.join(', ')}</p>}
+                {skills.languages.length > 0 && <p><strong>Languages:</strong> {skills.languages.join(', ')}</p>}
+              </div>
+            </div>
+          )}
+
+          {certifications.length > 0 && (
+            <div className="space-y-3 text-left">
+              <h2 className="text-[10px] uppercase tracking-widest font-bold text-yellow-600 text-center">Certifications</h2>
+              <div className="font-sans text-xs text-neutral-700 space-y-1">
+                {certifications.map((c) => (
+                  <p key={c.id}><strong>{c.name}</strong> {c.issuer && `(${c.issuer})`} {c.year && `&mdash; ${c.year}`}</p>
                 ))}
               </div>
             </div>
