@@ -1,0 +1,2546 @@
+"use client"
+
+import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowLeft, 
+  Sparkles, 
+  Plus, 
+  Trash2, 
+  Download, 
+  ChevronLeft, 
+  ChevronRight,
+  Link as LinkIcon,
+  FileCheck,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  Lock,
+  User,
+  Check
+} from 'lucide-react';
+import { useResume } from '@/context/ResumeContext';
+import { useToast } from '@/context/ToastContext';
+import { ResumeStyle } from '@/types/resume';
+import { ResumeTemplate } from '@/components/templates/Templates';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { GlassCard } from '@/components/ui/GlassCard';
+import { 
+  generateSummaryApi, 
+  improveExperienceApi 
+} from '@/utils/aiClient';
+import { simulateSummary, simulateBulletPoints } from '@/utils/aiSimulator';
+
+interface ValidationErrors {
+  name?: string;
+  jobTitle?: string;
+  email?: string;
+  phone?: string;
+  summary?: string;
+  experience?: string;
+  education?: string;
+  skills?: string;
+  projects?: string;
+  certifications?: string;
+  languages?: string;
+}
+
+function getStepLabels(industry: string | undefined | null) {
+  const defaultSteps = {
+    s1: "Contact",
+    s1_full: "Personal Info",
+    s2: "Summary",
+    s2_full: "Summary",
+    s3: "Experience",
+    s3_full: "Work History",
+    s3_sub: "Positions",
+    s4: "Education",
+    s4_full: "Education",
+    s4_sub: "Education History",
+    s5: "Skills",
+    s5_full: "Core Skills",
+    s5_tech: "Technical Skills",
+    s5_soft: "Soft Skills",
+    s6: "Projects",
+    s6_full: "Projects",
+    s6_sub: "Projects",
+    s7: "Certifications",
+    s7_full: "Certifications",
+    s7_sub: "Certifications",
+    s8: "Languages",
+    s8_full: "Languages",
+    s9: "Templates",
+    s9_full: "Design Template",
+    s10: "Export",
+    s10_full: "Preview & Export"
+  };
+
+  if (!industry) return defaultSteps;
+
+  switch (industry) {
+    case 'Engineering & Technology':
+      return {
+        ...defaultSteps,
+        s5: "Tech Stack",
+        s5_full: "Technical Stack",
+        s5_tech: "Languages & Frameworks",
+        s5_soft: "Engineering Methodologies",
+        s6: "GitHub & Projects",
+        s6_full: "GitHub & Projects",
+        s6_sub: "Technical Projects"
+      };
+    case 'Design & Media':
+      return {
+        ...defaultSteps,
+        s5: "Design Tools",
+        s5_full: "Design Tools & Skills",
+        s5_tech: "Creative & Design Tools",
+        s5_soft: "Artistic Specializations",
+        s6: "Creative Portfolio",
+        s6_full: "Creative Portfolio",
+        s6_sub: "Portfolio & Exhibitions",
+        s7: "Exhibitions & Awards",
+        s7_full: "Exhibitions & Awards",
+        s7_sub: "Exhibitions, Awards & Certifications"
+      };
+    case 'Business & Finance':
+      return {
+        ...defaultSteps,
+        s2: "Exec Summary",
+        s2_full: "Executive Summary",
+        s3: "Corp Experience",
+        s3_full: "Professional Experience",
+        s3_sub: "Career Chronology",
+        s4: "Credentials",
+        s4_full: "Academic Credentials",
+        s4_sub: "Academic Background",
+        s5: "Competencies",
+        s5_full: "Core Competencies",
+        s5_tech: "Analytical & Finance Tools",
+        s5_soft: "Leadership Competencies",
+        s6: "Case Studies",
+        s6_full: "Key Case Studies",
+        s6_sub: "Business Case Studies",
+        s7: "Licensing & Certs",
+        s7_full: "Licensing & Certifications",
+        s7_sub: "Professional Licenses & Certifications"
+      };
+    case 'Education & Learning':
+      return {
+        ...defaultSteps,
+        s2: "Philosophy",
+        s2_full: "Teaching Philosophy",
+        s3: "Teaching Exp",
+        s3_full: "Teaching Experience",
+        s3_sub: "Teaching & Instruction History",
+        s4: "Degrees",
+        s4_full: "Education & Degrees",
+        s4_sub: "Academic Degrees & Certifications",
+        s5: "Pedagogical",
+        s5_full: "Pedagogical Skills",
+        s5_tech: "Instructional Technologies",
+        s5_soft: "Pedagogical Skills",
+        s6: "Academic Research",
+        s6_full: "Academic Research",
+        s6_sub: "Research, Publications & Presentations",
+        s7: "Credentials & Lic",
+        s7_full: "Credentials & Licenses",
+        s7_sub: "State Credentials & Educator Licenses"
+      };
+    case 'Care Services':
+    case 'Community & Social':
+      return {
+        ...defaultSteps,
+        s2: "Prof Profile",
+        s2_full: "Professional Profile",
+        s3: "Field Work",
+        s3_full: "Clinical & Field Work",
+        s3_sub: "Clinical Practice & Case Management",
+        s4: "Education & Tr",
+        s4_full: "Education & Training",
+        s4_sub: "Academic & Clinical Training",
+        s5: "Caretaking",
+        s5_full: "Caretaking Skills",
+        s5_tech: "Medical & Caretaking Tools",
+        s5_soft: "Crisis Intervention & Soft Skills",
+        s6: "Outreach",
+        s6_full: "Community Outreach",
+        s6_sub: "Outreach Programs & Volunteer Leadership",
+        s7: "Licenses & Certs",
+        s7_full: "Licenses & Certifications",
+        s7_sub: "Care Licenses & Clinical Certifications"
+      };
+    case 'Hospitality & Tourism':
+      return {
+        ...defaultSteps,
+        s2: "Summary",
+        s2_full: "Professional Summary",
+        s3: "Service History",
+        s3_full: "Service History",
+        s3_sub: "Hospitality & Gastronomy Log",
+        s5: "Culinary Skills",
+        s5_full: "Culinary & Hospitality Skills",
+        s5_tech: "Hospitality Software & Culinary Tools",
+        s5_soft: "Customer Relations & Soft Skills",
+        s6: "Event Mgmt",
+        s6_full: "Event Management",
+        s6_sub: "Event Planning & Hospitality Projects",
+        s7: "Certs & Training",
+        s7_full: "Certifications & Training",
+        s7_sub: "Food Safety & Hospitality Certifications"
+      };
+    case 'Sales & Marketing':
+      return {
+        ...defaultSteps,
+        s2: "Prof Profile",
+        s2_full: "Professional Profile",
+        s3: "Sales Experience",
+        s3_full: "Sales & Marketing Experience",
+        s3_sub: "Campaign & Sales History",
+        s5: "Marketing Tools",
+        s5_full: "Marketing & Analytical Tools",
+        s5_tech: "Marketing Tools & CRM Stack",
+        s5_soft: "Negotiation & Analytical Skills",
+        s6: "Campaigns",
+        s6_full: "Campaigns & Case Studies",
+        s6_sub: "Marketing Campaigns & Projects"
+      };
+    default:
+      return defaultSteps;
+  }
+}
+
+export default function BuilderPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { activeResume, updateResume, builderStep: step, setBuilderStep: setStep } = useResume();
+  const resumeRef = useRef<HTMLDivElement>(null);
+
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [langInput, setLangInput] = useState('');
+  const [techSkillInput, setTechSkillInput] = useState('');
+  const [softSkillInput, setSoftSkillInput] = useState('');
+
+  // Style Wizard States
+  const [showStyleWizardModal, setShowStyleWizardModal] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardPhoto, setWizardPhoto] = useState<'no' | 'yes'>('no');
+  const [wizardColor, setWizardColor] = useState('#3b82f6');
+  const [wizardLayout, setWizardLayout] = useState<'one-column' | 'two-column'>('one-column');
+  const [wizardIndustries, setWizardIndustries] = useState<string[]>([]);
+  const [wizardTemplate, setWizardTemplate] = useState<typeof style.templateId>('modern');
+  const [wizardFontFamily, setWizardFontFamily] = useState<typeof style.fontFamily>('sans');
+  const [wizardFontSize, setWizardFontSize] = useState<typeof style.fontSize>('md');
+
+  // Custom Template Creator States
+  const [mobileViewTab, setMobileViewTab] = useState<'editor' | 'preview'>('editor');
+  const [customTemplates, setCustomTemplates] = useState<Array<{ id: string; name: string; badge: string; desc: string; columns: string; photo: boolean }>>([]);
+  const [showCustomTemplateModal, setShowCustomTemplateModal] = useState(false);
+  const [customTemplateName, setCustomTemplateName] = useState('');
+  const [customTemplateColumns, setCustomTemplateColumns] = useState<'1-column' | '2-column'>('1-column');
+  const [customTemplateHeader, setCustomTemplateHeader] = useState<'centered' | 'left' | 'banner'>('left');
+  const [customTemplateColor, setCustomTemplateColor] = useState('#8b5cf6');
+  const [customTemplateNotes, setCustomTemplateNotes] = useState('');
+
+  // Filter States for Template Selection
+  const [filterPhoto, setFilterPhoto] = useState<'all' | 'with-photo' | 'without-photo'>('all');
+  const [filterLayout, setFilterLayout] = useState<'all' | '1-column' | '2-column'>('all');
+  const [filterIndustry, setFilterIndustry] = useState<string | null>(null);
+
+  const selectedIndustry = filterIndustry || (wizardIndustries.length > 0 ? wizardIndustries[0] : null);
+  const stepLabels = getStepLabels(selectedIndustry);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedCustom = localStorage.getItem('mira_custom_templates');
+      if (savedCustom) {
+        try {
+          setCustomTemplates(JSON.parse(savedCustom));
+        } catch (e) {
+          console.error('Failed to parse custom templates:', e);
+        }
+      }
+
+      const name = localStorage.getItem('mira-user-name');
+      const email = localStorage.getItem('mira-user-email');
+      if (!name && !email) {
+        router.push('/auth/login');
+        return;
+      }
+    }
+    // Automatically trigger Style Wizard every time the builder page is loaded
+    setWizardStep(1);
+    setShowStyleWizardModal(true);
+  }, [router]);
+
+  const handleCreateCustomTemplate = () => {
+    if (!customTemplateName.trim()) {
+      toast('Please enter a template name', 'error');
+      return;
+    }
+
+    const newTemplate = {
+      id: `custom-${Date.now()}`,
+      name: customTemplateName.trim(),
+      badge: 'CUSTOM',
+      desc: customTemplateNotes.trim() || `${customTemplateColumns === '1-column' ? 'Single Column' : 'Two Column'} custom requirement design`,
+      columns: customTemplateColumns,
+      photo: wizardPhoto === 'yes'
+    };
+
+    const updated = [newTemplate, ...customTemplates];
+    setCustomTemplates(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mira_custom_templates', JSON.stringify(updated));
+    }
+
+    setWizardTemplate(newTemplate.id as any);
+    setWizardColor(customTemplateColor);
+    setWizardLayout(customTemplateColumns === '1-column' ? 'one-column' : 'two-column');
+    setShowCustomTemplateModal(false);
+    setCustomTemplateName('');
+    setCustomTemplateNotes('');
+    toast(`Custom template "${newTemplate.name}" created and selected!`, 'success');
+  };
+
+
+  // If no active resume, render loading state
+  if (!activeResume) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  const { personalInfo, summary, experience, education, skills, certifications, projects, style } = activeResume;
+
+  // Real-time Validation Engine
+  const validateStep = (currentStep: number): boolean => {
+    const newErrors: ValidationErrors = {};
+    let isValid = true;
+
+    if (currentStep === 1) {
+      if (!personalInfo.name.trim()) {
+        newErrors.name = "Full name is required.";
+        isValid = false;
+      }
+      if (!personalInfo.jobTitle.trim()) {
+        newErrors.jobTitle = "Job title target is required.";
+        isValid = false;
+      }
+      if (!personalInfo.email.trim()) {
+        newErrors.email = "Email address is required.";
+        isValid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalInfo.email)) {
+        newErrors.email = "Please specify a valid email address.";
+        isValid = false;
+      }
+      if (!personalInfo.phone.trim()) {
+        newErrors.phone = "Phone number is required.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 2) {
+      if (!summary.trim()) {
+        newErrors.summary = "Professional summary is required.";
+        isValid = false;
+      } else if (summary.trim().length < 50) {
+        newErrors.summary = "Summary should be at least 50 characters long.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 3 && experience.length > 0) {
+      const hasEmptyExp = experience.some(exp => !exp.company.trim() || !exp.role.trim());
+      if (hasEmptyExp) {
+        newErrors.experience = "All experiences must have a Company name and Role title.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 4 && education.length > 0) {
+      const hasEmptyEdu = education.some(edu => !edu.degree.trim() || !edu.university.trim());
+      if (hasEmptyEdu) {
+        newErrors.education = "All education items must specify a Degree program and University.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 5) {
+      if (skills.technical.length === 0) {
+        newErrors.skills = "Please add at least one technical skill.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 6 && projects.length > 0) {
+      const hasEmptyProj = projects.some(p => !p.title.trim() || !p.description.trim());
+      if (hasEmptyProj) {
+        newErrors.projects = "All projects must have a Title and Description.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 7 && certifications.length > 0) {
+      const hasEmptyCert = certifications.some(c => !c.name.trim() || !c.issuer.trim());
+      if (hasEmptyCert) {
+        newErrors.certifications = "All certifications must specify Name and Issuer.";
+        isValid = false;
+      }
+    }
+
+    if (currentStep === 8) {
+      if (skills.languages.length === 0) {
+        newErrors.languages = "Please specify at least one Language.";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleNextStep = () => {
+    const currentStep = step;
+
+    // Auto-commit any typed text in the fields before validating
+    if (currentStep === 5) {
+      const updatedSkills = { ...skills };
+      let hasUpdates = false;
+
+      if (techSkillInput.trim()) {
+        const newItems = techSkillInput.split(',')
+          .map(item => item.trim())
+          .filter(item => item !== '' && !skills.technical.includes(item));
+        if (newItems.length > 0) {
+          updatedSkills.technical = [...updatedSkills.technical, ...newItems];
+          hasUpdates = true;
+        }
+        setTechSkillInput('');
+      }
+
+      if (softSkillInput.trim()) {
+        const newItems = softSkillInput.split(',')
+          .map(item => item.trim())
+          .filter(item => item !== '' && !skills.soft.includes(item));
+        if (newItems.length > 0) {
+          updatedSkills.soft = [...updatedSkills.soft, ...newItems];
+          hasUpdates = true;
+        }
+        setSoftSkillInput('');
+      }
+
+      if (hasUpdates) {
+        updateResume({ skills: updatedSkills });
+        const newErrors = { ...errors };
+        let isValid = true;
+        if (updatedSkills.technical.length === 0) {
+          newErrors.skills = "Please add at least one technical skill.";
+          isValid = false;
+        } else {
+          delete newErrors.skills;
+        }
+        setErrors(newErrors);
+        
+        if (isValid) {
+          setStep(prev => Math.min(10, prev + 1));
+          return;
+        } else {
+          toast("Please resolve the validation errors before proceeding.", "error");
+          return;
+        }
+      }
+    }
+
+    if (validateStep(step)) {
+      setStep(prev => Math.min(10, prev + 1));
+    } else {
+      toast("Please resolve the validation errors before proceeding.", "error");
+    }
+  };
+
+  const handleBackStep = () => {
+    setStep(prev => Math.max(1, prev - 1));
+  };
+
+  // Form Field change handlers
+  const handlePersonalInfoChange = (field: keyof typeof personalInfo, value: string) => {
+    updateResume({
+      personalInfo: {
+        ...personalInfo,
+        [field]: value
+      }
+    });
+  };
+
+  const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateResume({ summary: e.target.value });
+  };
+
+  const handleGenerateSummary = async (tone: 'professional' | 'executive' | 'creative') => {
+    if (!personalInfo.jobTitle) {
+      toast("Please add a Job Title target in Step 1.", "error");
+      return;
+    }
+    setAiGenerating(true);
+    try {
+      const generated = await generateSummaryApi(personalInfo.jobTitle, tone);
+      updateResume({ summary: generated });
+      toast(`AI Summary generated successfully in ${tone} tone.`);
+    } catch (err) {
+      console.warn("[AI Summary Generator] Error:", err);
+      toast("Failed to query OpenAI. Using fallback simulator.", "info");
+      const generated = simulateSummary({
+        jobTitle: personalInfo.jobTitle,
+        tone
+      });
+      updateResume({ summary: generated });
+    } finally {
+      setAiGenerating(false);
+    }
+  };
+
+  // Experience handlers
+  const handleAddExperience = () => {
+    const newExp = {
+      id: `exp-${Date.now()}`,
+      company: '',
+      role: '',
+      duration: '',
+      location: '',
+      responsibilities: [''],
+      achievements: []
+    };
+    updateResume({ experience: [...experience, newExp] });
+  };
+
+  const handleUpdateExperience = (id: string, field: string, value: string | string[]) => {
+    const updated = experience.map(exp => {
+      if (exp.id === id) {
+        return { ...exp, [field]: value };
+      }
+      return exp;
+    });
+    updateResume({ experience: updated });
+  };
+
+  const handleDeleteExperience = (id: string) => {
+    updateResume({ experience: experience.filter(exp => exp.id !== id) });
+    toast("Experience entry deleted.", "info");
+  };
+
+  const handleAddResp = (expId: string) => {
+    const exp = experience.find(e => e.id === expId);
+    if (!exp) return;
+    handleUpdateExperience(expId, 'responsibilities', [...exp.responsibilities, '']);
+  };
+
+  const handleUpdateResp = (expId: string, idx: number, val: string) => {
+    const exp = experience.find(e => e.id === expId);
+    if (!exp) return;
+    const newResps = [...exp.responsibilities];
+    newResps[idx] = val;
+    handleUpdateExperience(expId, 'responsibilities', newResps);
+  };
+
+  const handleDeleteResp = (expId: string, idx: number) => {
+    const exp = experience.find(e => e.id === expId);
+    if (!exp) return;
+    handleUpdateExperience(expId, 'responsibilities', exp.responsibilities.filter((_, i) => i !== idx));
+  };
+
+  const handleEnhanceExperienceBullets = async (expId: string) => {
+    const exp = experience.find(e => e.id === expId);
+    if (!exp) return;
+    if (!personalInfo.jobTitle) {
+      toast("Please specify a target Job Title in Step 1.", "error");
+      return;
+    }
+    toast("AI is transforming responsibilities...", "info");
+    try {
+      const enhanced = await improveExperienceApi(personalInfo.jobTitle, exp.responsibilities);
+      handleUpdateExperience(expId, 'achievements', enhanced);
+      toast("Bullet points optimized into achievements.");
+    } catch (err) {
+      console.warn("[AI Experience Enhancer] Error:", err);
+      toast("AI optimization failed. Using simulator fallback.", "info");
+      const enhanced = simulateBulletPoints({
+        jobTitle: personalInfo.jobTitle,
+        tone: 'professional'
+      });
+      handleUpdateExperience(expId, 'achievements', enhanced);
+    }
+  };
+
+  // Education handlers
+  const handleAddEducation = () => {
+    const newEdu = {
+      id: `edu-${Date.now()}`,
+      degree: '',
+      university: '',
+      duration: '',
+      cgpa: '',
+      location: ''
+    };
+    updateResume({ education: [...education, newEdu] });
+  };
+
+  const handleUpdateEducation = (id: string, field: string, value: string) => {
+    const updated = education.map(edu => {
+      if (edu.id === id) {
+        return { ...edu, [field]: value };
+      }
+      return edu;
+    });
+    updateResume({ education: updated });
+  };
+
+  const handleDeleteEducation = (id: string) => {
+    updateResume({ education: education.filter(edu => edu.id !== id) });
+    toast("Education item deleted.", "info");
+  };
+
+  // Skills
+  const handleSkillAdd = (type: 'technical' | 'soft' | 'languages', value: string) => {
+    if (!value.trim()) return;
+    
+    // Split by commas, trim, filter empty and duplicates
+    const newItems = value.split(',')
+      .map(item => item.trim())
+      .filter(item => item !== '' && !skills[type].includes(item));
+      
+    if (newItems.length === 0) return;
+
+    updateResume({
+      skills: {
+        ...skills,
+        [type]: [...skills[type], ...newItems]
+      }
+    });
+  };
+
+  const handleSkillDelete = (type: 'technical' | 'soft' | 'languages', idx: number) => {
+    updateResume({
+      skills: {
+        ...skills,
+        [type]: skills[type].filter((_, i) => i !== idx)
+      }
+    });
+  };
+
+  // Projects
+  const handleAddProject = () => {
+    const newProj = {
+      id: `proj-${Date.now()}`,
+      title: '',
+      description: '',
+      technologies: [],
+      link: ''
+    };
+    updateResume({ projects: [...projects, newProj] });
+  };
+
+  const handleUpdateProject = (id: string, field: string, value: string | string[]) => {
+    updateResume({
+      projects: projects.map(p => p.id === id ? { ...p, [field]: value } : p)
+    });
+  };
+
+  const handleDeleteProject = (id: string) => {
+    updateResume({ projects: projects.filter(p => p.id !== id) });
+    toast("Project item deleted.", "info");
+  };
+
+  // Certs
+  const handleAddCert = () => {
+    const newCert = {
+      id: `cert-${Date.now()}`,
+      name: '',
+      issuer: '',
+      year: ''
+    };
+    updateResume({ certifications: [...certifications, newCert] });
+  };
+
+  const handleUpdateCert = (id: string, field: string, value: string) => {
+    updateResume({
+      certifications: certifications.map(c => c.id === id ? { ...c, [field]: value } : c)
+    });
+  };
+
+  const handleDeleteCert = (id: string) => {
+    updateResume({ certifications: certifications.filter(c => c.id !== id) });
+    toast("Certification item deleted.", "info");
+  };
+
+  // Theme layout
+  const handleStyleChange = (field: keyof typeof style, value: string) => {
+    updateResume({
+      style: {
+        ...style,
+        [field]: value
+      }
+    });
+  };
+
+  const handleApplyWizardStyle = () => {
+    const finalTemplate = wizardTemplate || 'modern';
+    const finalFontFamily = wizardFontFamily || 'sans';
+    const finalFontSize = wizardFontSize || 'md';
+
+    updateResume({
+      personalInfo: {
+        ...personalInfo,
+        photo: wizardPhoto === 'yes' ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop' : ''
+      },
+      style: {
+        ...style,
+        templateId: finalTemplate,
+        primaryColor: wizardColor,
+        fontFamily: finalFontFamily,
+        fontSize: finalFontSize
+      }
+    });
+
+    // Sync the filters state with wizard configurations
+    setFilterPhoto(wizardPhoto === 'yes' ? 'with-photo' : 'without-photo');
+    setFilterLayout(wizardLayout === 'one-column' ? '1-column' : '2-column');
+    if (wizardIndustries.length > 0) {
+      setFilterIndustry(wizardIndustries[0]);
+    } else {
+      setFilterIndustry(null);
+    }
+
+    setShowStyleWizardModal(false);
+    toast(`Applied Style Settings: template is now ${finalTemplate.replace('-', ' ')} with ${finalFontFamily} font!`, "success");
+  };
+
+  const handleDownloadPdf = () => {
+    toast("Preparing PDF document...", "info");
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`https://mira-resume.io/share/${activeResume.id}`);
+    toast("Shareable link copied.");
+  };
+
+  const handleExportTxt = () => {
+    const text = `
+${personalInfo.name} - ${personalInfo.jobTitle}
+Email: ${personalInfo.email} | Phone: ${personalInfo.phone}
+Address: ${personalInfo.address}
+LinkedIn: ${personalInfo.linkedin} | GitHub: ${personalInfo.github}
+
+SUMMARY
+${summary}
+
+EXPERIENCE
+${experience.map(exp => `
+${exp.role} at ${exp.company} (${exp.duration})
+${exp.responsibilities.map(r => `- ${r}`).join('\n')}
+${exp.achievements.map(a => `- Achievement: ${a}`).join('\n')}
+`).join('\n')}
+
+EDUCATION
+${education.map(edu => `
+${edu.degree} - ${edu.university} (${edu.duration}) ${edu.cgpa ? `CGPA: ${edu.cgpa}` : ''}
+`).join('\n')}
+
+TECHNICAL SKILLS: ${skills.technical.join(', ')}
+SOFT SKILLS: ${skills.soft.join(', ')}
+LANGUAGES: ${skills.languages.join(', ')}
+    `.trim();
+
+    const element = document.createElement("a");
+    const file = new Blob([text], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${personalInfo.name.replace(/\s+/g, '_')}_Resume.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    toast("Plain Text export finished.");
+  };
+
+  const handleDownloadDocx = () => {
+    toast("Generating MS Word document...", "info");
+    const htmlHeader = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <title>${personalInfo.name} Resume</title>
+        <!--[if gte mso 9]>
+        <xml>
+          <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+          </w:WordDocument>
+        </xml>
+        <![endif]-->
+        <style>
+          body { font-family: 'Arial', sans-serif; font-size: 11pt; line-height: 1.25; color: #1a1a1a; margin: 1in; }
+          h1 { font-size: 22pt; font-weight: bold; text-transform: uppercase; margin-bottom: 2pt; color: #000; text-align: center; }
+          .job-title { font-size: 12pt; text-transform: uppercase; color: #666; font-weight: bold; margin-bottom: 12pt; text-align: center; }
+          .contacts { text-align: center; font-size: 10pt; color: #555; margin-bottom: 20pt; border-bottom: 2px solid #000; padding-bottom: 8pt; }
+          h2 { font-size: 13pt; font-weight: bold; text-transform: uppercase; margin-top: 18pt; border-bottom: 1px solid #ccc; padding-bottom: 2pt; margin-bottom: 8pt; color: ${style.primaryColor || '#000'}; }
+          .section { margin-bottom: 12pt; }
+          .entry { margin-bottom: 8.5pt; }
+          .entry-header { font-weight: bold; font-size: 11pt; }
+          ul { margin-top: 3pt; margin-bottom: 6pt; padding-left: 20pt; }
+          li { font-size: 10.5pt; color: #333; margin-bottom: 2pt; }
+        </style>
+      </head>
+      <body>
+        <h1>${personalInfo.name || 'Your Name'}</h1>
+        <div class="job-title">${personalInfo.jobTitle || 'Target Position'}</div>
+        <div class="contacts">
+          \${[personalInfo.email, personalInfo.phone, personalInfo.address, personalInfo.linkedin, personalInfo.github].filter(Boolean).join('  |  ')}
+        </div>
+        \${summary ? \`<div class="section"><h2>Professional Summary</h2><p>\${summary}</p></div>\` : ''}
+        \${experience.length > 0 ? \`
+        <div class="section">
+          <h2>Work Experience</h2>
+          \${experience.map(exp => \`
+            <div class="entry">
+              <div class="entry-header"><strong>\${exp.role} &mdash; \${exp.company}</strong><span style="float: right; font-weight: normal; font-size: 10pt;">\${exp.duration}</span></div>
+              <div style="font-size: 10pt; color: #666; margin-bottom: 4pt;">\${exp.location || ''}</div>
+              <ul>\${exp.responsibilities.map(r => \`<li>\${r}</li>\`).join('')}\${exp.achievements.map(a => \`<li><strong>\${a}</strong></li>\`).join('')}</ul>
+            </div>
+          \`).join('')}
+        </div>
+        \` : ''}
+        \${education.length > 0 ? \`
+        <div class="section">
+          <h2>Education</h2>
+          \${education.map(edu => \`
+            <div class="entry">
+              <div class="entry-header"><strong>\${edu.degree} &mdash; \${edu.university}</strong><span style="float: right; font-weight: normal; font-size: 10pt;">\${edu.duration}</span></div>
+              \${edu.cgpa ? \`<div style="font-size: 10pt; color: #666;">CGPA: \${edu.cgpa}</div>\` : ''}
+            </div>
+          \`).join('')}
+        </div>
+        \` : ''}
+        <div class="section">
+          <h2>Skills</h2>
+          <p><strong>Technical Skills:</strong> \${skills.technical.join(', ')}</p>
+          \${skills.soft.length > 0 ? \`<p><strong>Soft Skills:</strong> \${skills.soft.join(', ')}</p>\` : ''}
+          \${skills.languages.length > 0 ? \`<p><strong>Languages:</strong> \${skills.languages.join(', ')}</p>\` : ''}
+        </div>
+      </body>
+      </html>
+    `;
+    const blob = new Blob(['\ufeff' + htmlHeader], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const element = document.createElement("a");
+    element.href = url;
+    element.download = `\${personalInfo.name.replace(/\\s+/g, '_')}_Resume.doc`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    toast("DOCX file downloaded successfully.");
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col font-sans overflow-hidden">
+      
+      {/* Stepper Header */}
+      <nav className="no-print sticky top-0 left-0 right-0 z-40 glass-panel border-b border-neutral-900 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center space-x-3 text-left">
+            <Link 
+              href="/" 
+              className="h-8 w-8 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-white text-neutral-400 hover:text-white flex items-center justify-center transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <div>
+              <h1 className="text-sm font-bold tracking-wider uppercase truncate max-w-[200px]">
+                {activeResume.title}
+              </h1>
+              <p className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider mt-0.5">10-Step Builder Workspace</p>
+            </div>
+          </div>
+
+          {/* Sizing progress percent */}
+          <div className="flex items-center space-x-3 text-left sm:text-right">
+            <div className="hidden sm:block">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Resume Progress</span>
+              <p className="text-xs font-bold text-white mt-0.5">{step * 10}% Complete</p>
+            </div>
+            <div className="h-1.5 w-32 bg-neutral-900 rounded-full overflow-hidden border border-neutral-850">
+              <div className="h-full bg-white transition-all duration-500" style={{ width: `${step * 10}%` }}></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stepper Steps Row */}
+        <div className="hidden lg:flex justify-between max-w-7xl mx-auto mt-4 pt-4 border-t border-neutral-900/50 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+          {[
+            stepLabels.s1, stepLabels.s2, stepLabels.s3, stepLabels.s4, stepLabels.s5, 
+            stepLabels.s6, stepLabels.s7, stepLabels.s8, stepLabels.s9, stepLabels.s10
+          ].map((name, i) => {
+            const stepNum = i + 1;
+            return (
+              <button 
+                key={i}
+                onClick={() => {
+                  if (validateStep(step)) {
+                    setStep(stepNum);
+                  }
+                }}
+                className={cn(
+                  "pb-2 border-b-2 transition-all flex items-center space-x-1.5",
+                  step === stepNum 
+                    ? "text-white border-white font-extrabold" 
+                    : stepNum < step 
+                      ? "text-emerald-400 border-emerald-500"
+                      : "border-transparent hover:text-neutral-300"
+                )}
+              >
+                <span>{stepNum}</span>
+                <span>{name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      {/* Mobile View Switcher Bar (Visible on mobile/tablet screens < 1024px) */}
+      <div className="lg:hidden flex items-center justify-center p-2.5 bg-neutral-950 border-b border-neutral-900 sticky top-[73px] z-20">
+        <div className="flex items-center p-1 bg-neutral-900 rounded-xl border border-neutral-800 text-xs font-bold w-full max-w-xs justify-between">
+          <button
+            type="button"
+            onClick={() => setMobileViewTab('editor')}
+            className={`flex-1 py-1.5 rounded-lg transition-all text-center ${
+              mobileViewTab === 'editor'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            📝 Edit Form
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileViewTab('preview')}
+            className={`flex-1 py-1.5 rounded-lg transition-all text-center ${
+              mobileViewTab === 'preview'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            👁 Live Preview
+          </button>
+        </div>
+      </div>
+
+      {/* Builder Workspace Pane */}
+      <div className="flex-1 flex overflow-hidden">
+        
+        {/* Left Column: Form Editor */}
+        <div className={cn(
+          "no-print w-full lg:w-[480px] xl:w-[520px] border-r border-neutral-900 bg-neutral-950/20 flex-col justify-between shrink-0 h-full overflow-y-auto",
+          mobileViewTab === 'preview' ? 'hidden lg:flex' : 'flex'
+        )}>
+          
+          <div className="p-6 space-y-6 pb-20">
+            
+            {/* Step Banner */}
+            <div className="flex justify-between items-center bg-neutral-950/80 border border-neutral-900 p-3 rounded-lg text-left">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Step {step} of 10</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-white">
+                {step === 1 && stepLabels.s1_full}
+                {step === 2 && stepLabels.s2_full}
+                {step === 3 && stepLabels.s3_full}
+                {step === 4 && stepLabels.s4_full}
+                {step === 5 && stepLabels.s5_full}
+                {step === 6 && stepLabels.s6_full}
+                {step === 7 && stepLabels.s7_full}
+                {step === 8 && stepLabels.s8_full}
+                {step === 9 && stepLabels.s9_full}
+                {step === 10 && stepLabels.s10_full}
+              </span>
+            </div>
+
+            {/* STEP 1: Personal Info */}
+            {step === 1 && (
+              <div className="space-y-6 text-left">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Full Name</label>
+                    <Input 
+                      value={personalInfo.name} 
+                      onChange={(e) => handlePersonalInfoChange('name', e.target.value)} 
+                      placeholder="Alexander Sterling" 
+                    />
+                    {errors.name && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.name}</p>}
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Job Title Target</label>
+                    <Input 
+                      value={personalInfo.jobTitle} 
+                      onChange={(e) => handlePersonalInfoChange('jobTitle', e.target.value)} 
+                      placeholder="Senior Full Stack Architect" 
+                    />
+                    {errors.jobTitle && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.jobTitle}</p>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Email</label>
+                      <Input 
+                        type="email" 
+                        value={personalInfo.email} 
+                        onChange={(e) => handlePersonalInfoChange('email', e.target.value)} 
+                        placeholder="name@company.com" 
+                      />
+                      {errors.email && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.email}</p>}
+                    </div>
+                    <div>
+                      <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Phone</label>
+                      <Input 
+                        value={personalInfo.phone} 
+                        onChange={(e) => handlePersonalInfoChange('phone', e.target.value)} 
+                        placeholder="+1 (555) 019-2834" 
+                      />
+                      {errors.phone && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.phone}</p>}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Address Location</label>
+                    <Input 
+                      value={personalInfo.address} 
+                      onChange={(e) => handlePersonalInfoChange('address', e.target.value)} 
+                      placeholder="Manhattan, New York, NY" 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1.5">Profile Photo</label>
+                    <div className="flex gap-3 items-center">
+                      {personalInfo.photo ? (
+                        <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-800 shrink-0">
+                          <img src={personalInfo.photo} alt="Profile preview" className="h-full w-full object-cover" />
+                          <button 
+                            type="button"
+                            onClick={() => handlePersonalInfoChange('photo', '')}
+                            className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-white text-[9px] uppercase font-bold"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-500 shrink-0">
+                          <User className="h-5 w-5" />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2">
+                        <Input 
+                          value={personalInfo.photo || ''} 
+                          onChange={(e) => handlePersonalInfoChange('photo', e.target.value)} 
+                          placeholder="Paste photo URL or upload file..." 
+                          className="text-xs"
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="px-2.5 py-1 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 rounded text-[9px] uppercase font-bold tracking-wider text-neutral-300 cursor-pointer transition-colors">
+                            Upload File
+                            <input 
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    if (event.target?.result) {
+                                      handlePersonalInfoChange('photo', event.target.result as string);
+                                    }
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          <span className="text-[9px] text-neutral-500 font-medium uppercase">Max 2MB (JPEG, PNG)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-neutral-900 space-y-4">
+                  <h4 className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold">Social Links</h4>
+                  <div>
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">LinkedIn URL</label>
+                    <Input 
+                      value={personalInfo.linkedin} 
+                      onChange={(e) => handlePersonalInfoChange('linkedin', e.target.value)} 
+                      placeholder="linkedin.com/in/alex-sterling" 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">GitHub URL</label>
+                    <Input 
+                      value={personalInfo.github} 
+                      onChange={(e) => handlePersonalInfoChange('github', e.target.value)} 
+                      placeholder="github.com/alexsterling" 
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Summary */}
+            {step === 2 && (
+              <div className="space-y-6 text-left">
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400">Professional Summary</label>
+                    <span className="text-[8px] bg-neutral-900 border border-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded font-bold">LEN: {summary.length}</span>
+                  </div>
+                  <Textarea 
+                    value={summary} 
+                    onChange={handleSummaryChange} 
+                    placeholder="Briefly state your core expertise and target role parameters..."
+                    className="min-h-[160px]"
+                  />
+                  {errors.summary && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.summary}</p>}
+                </div>
+
+                <div className="p-4 bg-neutral-950 border border-neutral-900 rounded-xl space-y-4">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-purple-400">
+                    <Sparkles className="h-4 w-4 animate-pulse" />
+                    <span>Generate summary with AI</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button onClick={() => handleGenerateSummary('professional')} disabled={aiGenerating} className="py-2 bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 text-[9px] font-bold uppercase tracking-wider rounded transition-colors">Professional</button>
+                    <button onClick={() => handleGenerateSummary('executive')} disabled={aiGenerating} className="py-2 bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 text-[9px] font-bold uppercase tracking-wider rounded transition-colors">Executive</button>
+                    <button onClick={() => handleGenerateSummary('creative')} disabled={aiGenerating} className="py-2 bg-neutral-900 border border-neutral-850 hover:bg-neutral-800 text-[9px] font-bold uppercase tracking-wider rounded transition-colors">Creative</button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Experience */}
+            {step === 3 && (
+              <div className="space-y-6 text-left">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{stepLabels.s3_sub}</h3>
+                  <button 
+                    onClick={handleAddExperience}
+                    className="px-3 py-1.5 bg-neutral-900 border border-neutral-850 text-[9px] font-bold uppercase tracking-wider rounded flex items-center space-x-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Position</span>
+                  </button>
+                </div>
+                {errors.experience && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.experience}</p>}
+
+                <div className="space-y-6">
+                  {experience.map((exp) => (
+                    <GlassCard key={exp.id} className="p-5 border border-neutral-900 space-y-4 relative">
+                      <button 
+                        onClick={() => handleDeleteExperience(exp.id)}
+                        className="absolute top-4 right-4 text-neutral-500 hover:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Company</label>
+                          <Input value={exp.company} onChange={(e) => handleUpdateExperience(exp.id, 'company', e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Role Title</label>
+                          <Input value={exp.role} onChange={(e) => handleUpdateExperience(exp.id, 'role', e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Duration</label>
+                          <Input value={exp.duration} onChange={(e) => handleUpdateExperience(exp.id, 'duration', e.target.value)} placeholder="2022 - Present" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Location</label>
+                          <Input value={exp.location} onChange={(e) => handleUpdateExperience(exp.id, 'location', e.target.value)} />
+                        </div>
+                      </div>
+
+                      {/* Responsibilities list */}
+                      <div className="space-y-2 pt-2 border-t border-neutral-900">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400">Responsibilities</label>
+                          <button onClick={() => handleAddResp(exp.id)} className="text-[9px] font-bold text-neutral-400 hover:text-white uppercase">+ Add Bullet</button>
+                        </div>
+                        <div className="space-y-2">
+                          {exp.responsibilities.map((resp, rIdx) => (
+                            <div key={rIdx} className="flex items-center space-x-2">
+                              <Input value={resp} onChange={(e) => handleUpdateResp(exp.id, rIdx, e.target.value)} />
+                              <button onClick={() => handleDeleteResp(exp.id, rIdx)} className="text-neutral-500 hover:text-red-400"><X className="h-3.5 w-3.5" /></button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={() => handleEnhanceExperienceBullets(exp.id)}
+                        className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 text-[9px] font-bold uppercase tracking-wider text-purple-400 hover:text-purple-300 border border-neutral-800 rounded flex items-center justify-center space-x-1.5"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span>Enhance Bullet Points with AI</span>
+                      </button>
+
+                      {exp.achievements.length > 0 && (
+                        <div className="p-3 bg-neutral-900/50 rounded border border-neutral-800/50 text-xs text-neutral-300 space-y-1">
+                          <span className="text-[8px] uppercase tracking-widest text-neutral-500 font-bold block mb-1">Optimized Output</span>
+                          {exp.achievements.map((ach, aIdx) => (
+                            <p key={aIdx} className="italic">&bull; {ach}</p>
+                          ))}
+                        </div>
+                      )}
+                    </GlassCard>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Education */}
+            {step === 4 && (
+              <div className="space-y-6 text-left">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{stepLabels.s4_sub}</h3>
+                  <button 
+                    onClick={handleAddEducation}
+                    className="px-3 py-1.5 bg-neutral-900 border border-neutral-850 text-[9px] font-bold uppercase tracking-wider rounded flex items-center space-x-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Edu</span>
+                  </button>
+                </div>
+                {errors.education && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.education}</p>}
+
+                <div className="space-y-6">
+                  {education.map((edu) => (
+                    <GlassCard key={edu.id} className="p-5 border border-neutral-900 space-y-4 relative">
+                      <button 
+                        onClick={() => handleDeleteEducation(edu.id)}
+                        className="absolute top-4 right-4 text-neutral-500 hover:text-red-400"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Degree Program</label>
+                          <Input value={edu.degree} onChange={(e) => handleUpdateEducation(edu.id, 'degree', e.target.value)} />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">University</label>
+                          <Input value={edu.university} onChange={(e) => handleUpdateEducation(edu.id, 'university', e.target.value)} />
+                        </div>
+                        <div>
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Duration</label>
+                          <Input value={edu.duration} onChange={(e) => handleUpdateEducation(edu.id, 'duration', e.target.value)} placeholder="2016 - 2020" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">CGPA</label>
+                          <Input value={edu.cgpa} onChange={(e) => handleUpdateEducation(edu.id, 'cgpa', e.target.value)} />
+                        </div>
+                      </div>
+                    </GlassCard>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Skills */}
+            {step === 5 && (
+              <div className="space-y-6 text-left">
+                <div className="space-y-4">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{stepLabels.s5_tech}</h3>
+                  <Input 
+                    placeholder="Type skill and press Enter or comma (e.g. Next.js)" 
+                    value={techSkillInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.endsWith(',')) {
+                        handleSkillAdd('technical', val);
+                        setTechSkillInput('');
+                      } else {
+                        setTechSkillInput(val);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSkillAdd('technical', techSkillInput);
+                        setTechSkillInput('');
+                      }
+                    }}
+                  />
+                  {errors.skills && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.skills}</p>}
+                  
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {skills.technical.map((sk, idx) => (
+                      <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1.5">
+                        <span>{sk}</span>
+                        <button onClick={() => handleSkillDelete('technical', idx)} className="text-neutral-500 hover:text-white">&times;</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-neutral-900">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{stepLabels.s5_soft}</h3>
+                  <Input 
+                    placeholder="Type skill and press Enter or comma (e.g. Leadership)" 
+                    value={softSkillInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.endsWith(',')) {
+                        handleSkillAdd('soft', val);
+                        setSoftSkillInput('');
+                      } else {
+                        setSoftSkillInput(val);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSkillAdd('soft', softSkillInput);
+                        setSoftSkillInput('');
+                      }
+                    }}
+                  />
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {skills.soft.map((sk, idx) => (
+                      <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1.5">
+                        <span>{sk}</span>
+                        <button onClick={() => handleSkillDelete('soft', idx)} className="text-neutral-500 hover:text-white">&times;</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6: Projects */}
+            {step === 6 && (
+              <div className="space-y-6 text-left">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{stepLabels.s6_sub}</h3>
+                  <button 
+                    onClick={handleAddProject}
+                    className="px-3 py-1.5 bg-neutral-900 border border-neutral-850 text-[9px] font-bold uppercase tracking-wider rounded flex items-center space-x-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Project</span>
+                  </button>
+                </div>
+                {errors.projects && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.projects}</p>}
+
+                <div className="space-y-6">
+                  {projects.map((proj) => (
+                    <GlassCard key={proj.id} className="p-4 bg-neutral-950 border border-neutral-900 space-y-3 relative text-left">
+                      <button 
+                        onClick={() => handleDeleteProject(proj.id)}
+                        className="absolute top-4 right-4 text-neutral-500 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                      <div>
+                        <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Project Title</label>
+                        <Input value={proj.title} onChange={(e) => handleUpdateProject(proj.id, 'title', e.target.value)} />
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Description</label>
+                        <Textarea value={proj.description} onChange={(e) => handleUpdateProject(proj.id, 'description', e.target.value)} className="min-h-[60px]" />
+                      </div>
+                    </GlassCard>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 7: Certifications */}
+            {step === 7 && (
+              <div className="space-y-6 text-left">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">{stepLabels.s7_sub}</h3>
+                  <button 
+                    onClick={handleAddCert}
+                    className="px-3 py-1.5 bg-neutral-900 border border-neutral-850 text-[9px] font-bold uppercase tracking-wider rounded flex items-center space-x-1"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Cert</span>
+                  </button>
+                </div>
+                {errors.certifications && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.certifications}</p>}
+
+                <div className="space-y-4">
+                  {certifications.map((cert) => (
+                    <div key={cert.id} className="grid grid-cols-3 gap-2 items-center relative pr-8">
+                      <Input value={cert.name} onChange={(e) => handleUpdateCert(cert.id, 'name', e.target.value)} placeholder="Name" />
+                      <Input value={cert.issuer} onChange={(e) => handleUpdateCert(cert.id, 'issuer', e.target.value)} placeholder="Issuer" />
+                      <Input value={cert.year} onChange={(e) => handleUpdateCert(cert.id, 'year', e.target.value)} placeholder="Year" />
+                      <button 
+                        onClick={() => handleDeleteCert(cert.id)}
+                        className="absolute right-0 top-3 text-neutral-500 hover:text-red-400 animate-pulse"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 8: Languages */}
+            {step === 8 && (
+              <div className="space-y-6 text-left">
+                <div className="space-y-4">
+                  <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold">Languages spoken</h3>
+                  <div className="flex gap-2">
+                    <Input 
+                      placeholder="e.g. Spanish (Fluent)" 
+                      value={langInput}
+                      onChange={(e) => setLangInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSkillAdd('languages', langInput);
+                          setLangInput('');
+                        }
+                      }}
+                    />
+                    <button 
+                      onClick={() => {
+                        handleSkillAdd('languages', langInput);
+                        setLangInput('');
+                      }}
+                      className="px-4 bg-white text-black hover:bg-neutral-200 text-xs font-bold uppercase rounded"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {errors.languages && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.languages}</p>}
+
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {skills.languages.map((sk, idx) => (
+                      <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1.5">
+                        <span>{sk}</span>
+                        <button onClick={() => handleSkillDelete('languages', idx)} className="text-neutral-500 hover:text-white">&times;</button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 9: Choose Template */}
+            {step === 9 && (
+              <div className="space-y-6 text-left">
+                {/* Style Wizard Banner */}
+                <div className="p-4 bg-gradient-to-br from-indigo-950/50 via-purple-950/40 to-blue-950/40 border border-neutral-850 rounded-xl space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1.5 bg-indigo-500/10 rounded-lg">
+                      <Sparkles className="h-4 w-4 text-indigo-400" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">Style Onboarding Wizard</h4>
+                      <p className="text-[10px] text-neutral-400">Step-by-step layout, photo, and color configurator</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setWizardStep(1);
+                      setShowStyleWizardModal(true);
+                    }}
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-1.5"
+                  >
+                    <span>🪄 Run Selection Wizard</span>
+                  </button>
+                </div>
+
+                {/* FILTER CONTROLS BAR (Matches Screenshot 5) */}
+                <div className="p-4 bg-neutral-950 border border-neutral-900 rounded-xl space-y-3.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Photo dropdown */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] uppercase tracking-wider text-neutral-500 font-bold block">Filter Photo</label>
+                      <select 
+                        value={filterPhoto} 
+                        onChange={(e) => setFilterPhoto(e.target.value as 'all' | 'with-photo' | 'without-photo')}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg py-1.5 px-2.5 text-xs text-neutral-300 focus:outline-none focus:border-neutral-750 cursor-pointer"
+                      >
+                        <option value="all">All Profiles</option>
+                        <option value="with-photo">With Photo</option>
+                        <option value="without-photo">Without Photo</option>
+                      </select>
+                    </div>
+
+                    {/* Columns dropdown */}
+                    <div className="space-y-1">
+                      <label className="text-[9px] uppercase tracking-wider text-neutral-500 font-bold block">Layout Columns</label>
+                      <select 
+                        value={filterLayout} 
+                        onChange={(e) => setFilterLayout(e.target.value as 'all' | '1-column' | '2-column')}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg py-1.5 px-2.5 text-xs text-neutral-300 focus:outline-none focus:border-neutral-750 cursor-pointer"
+                      >
+                        <option value="all">All Columns</option>
+                        <option value="1-column">1 Column</option>
+                        <option value="2-column">2 Columns</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Accent Colors row picker */}
+                  <div className="space-y-1 pt-1.5 border-t border-neutral-900/60">
+                    <label className="text-[9px] uppercase tracking-wider text-neutral-500 font-bold block mb-1">Color Palette</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { hex: '#333333', name: 'Charcoal' },
+                        { hex: '#b5a69a', name: 'Beige' },
+                        { hex: '#1e3a8a', name: 'Navy' },
+                        { hex: '#3b82f6', name: 'Blue' },
+                        { hex: '#06b6d4', name: 'Cyan' },
+                        { hex: '#10b981', name: 'Teal' },
+                        { hex: '#f59e0b', name: 'Orange' },
+                        { hex: '#ef4444', name: 'Red' },
+                        { hex: '#8b5cf6', name: 'Purple' }
+                      ].map((colorObj) => (
+                        <button 
+                          key={colorObj.hex}
+                          onClick={() => handleStyleChange('primaryColor', colorObj.hex)}
+                          className={`h-5 w-5 rounded-full relative transition-all ${
+                            style.primaryColor === colorObj.hex 
+                              ? 'ring-2 ring-indigo-500 scale-110 shadow-lg' 
+                              : 'border border-neutral-800 hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: colorObj.hex }}
+                          title={colorObj.name}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter active badges list */}
+                {(filterPhoto !== 'all' || filterLayout !== 'all' || filterIndustry) && (
+                  <div className="flex flex-wrap items-center gap-1.5 py-0.5">
+                    <span className="text-[10px] text-neutral-500 font-bold mr-1">Active filters:</span>
+                    {filterPhoto !== 'all' && (
+                      <span className="bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 px-2 py-0.5 rounded flex items-center space-x-1.5">
+                        <span>{filterPhoto === 'with-photo' ? 'With Photo' : 'Without Photo'}</span>
+                        <button onClick={() => setFilterPhoto('all')} className="text-neutral-500 hover:text-white">&times;</button>
+                      </span>
+                    )}
+                    {filterLayout !== 'all' && (
+                      <span className="bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 px-2 py-0.5 rounded flex items-center space-x-1.5">
+                        <span>{filterLayout === '1-column' ? '1 Column' : '2 Columns'}</span>
+                        <button onClick={() => setFilterLayout('all')} className="text-neutral-500 hover:text-white">&times;</button>
+                      </span>
+                    )}
+                    {filterIndustry && (
+                      <span className="bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 px-2 py-0.5 rounded flex items-center space-x-1.5">
+                        <span>{filterIndustry}</span>
+                        <button onClick={() => setFilterIndustry(null)} className="text-neutral-500 hover:text-white">&times;</button>
+                      </span>
+                    )}
+                    <button 
+                      onClick={() => {
+                        setFilterPhoto('all');
+                        setFilterLayout('all');
+                        setFilterIndustry(null);
+                      }}
+                      className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold ml-1 transition-colors"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                )}
+
+                {/* TEMPLATE CARDS PREVIEW GRID (Matches Screenshot 5 Layout) */}
+                <div className="space-y-4 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-500">
+                      Showing {
+                        [
+                          { id: 'modern', name: 'Modern Layout', columns: '1-column', photo: false },
+                          { id: 'executive', name: 'Executive Serif', columns: '1-column', photo: false },
+                          { id: 'corporate', name: 'Corporate Grid', columns: '1-column', photo: true },
+                          { id: 'minimal', name: 'Minimal Clean', columns: '1-column', photo: false },
+                          { id: 'creative', name: 'Creative Profile', columns: '2-column', photo: true },
+                          { id: 'elegant', name: 'Elegant Wave', columns: '1-column', photo: false },
+                          { id: 'ats-friendly', name: 'ATS Structural', columns: '1-column', photo: false },
+                          { id: 'dark', name: 'Dark Contrast', columns: '1-column', photo: false },
+                          { id: 'professional', name: 'Professional Clean', columns: '1-column', photo: false },
+                          { id: 'luxury', name: 'Luxury Border', columns: '2-column', photo: false },
+                          { id: 'academic', name: 'Academic Mono', columns: '1-column', photo: false },
+                          { id: 'two-column', name: 'Two-Column Split', columns: '2-column', photo: true },
+                          { id: 'btech-fresher', name: 'B.Tech Fresher Dev', columns: '2-column', photo: true }
+                        ].filter(t => {
+                          if (filterPhoto === 'with-photo' && !t.photo) return false;
+                          if (filterPhoto === 'without-photo' && t.photo) return false;
+                          if (filterLayout === '1-column' && t.columns !== '1-column') return false;
+                          if (filterLayout === '2-column' && t.columns !== '2-column') return false;
+                          return true;
+                        }).length
+                      } templates
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1 pb-4">
+                    {[
+                      { id: 'modern', name: 'Modern Layout', columns: '1-column', photo: false },
+                      { id: 'executive', name: 'Executive Serif', columns: '1-column', photo: false },
+                      { id: 'corporate', name: 'Corporate Grid', columns: '1-column', photo: true },
+                      { id: 'minimal', name: 'Minimal Clean', columns: '1-column', photo: false },
+                      { id: 'creative', name: 'Creative Profile', columns: '2-column', photo: true },
+                      { id: 'elegant', name: 'Elegant Wave', columns: '1-column', photo: false },
+                      { id: 'ats-friendly', name: 'ATS Structural', columns: '1-column', photo: false },
+                      { id: 'dark', name: 'Dark Contrast', columns: '1-column', photo: false },
+                      { id: 'professional', name: 'Professional Clean', columns: '1-column', photo: false },
+                      { id: 'luxury', name: 'Luxury Border', columns: '2-column', photo: false },
+                      { id: 'academic', name: 'Academic Mono', columns: '1-column', photo: false },
+                      { id: 'two-column', name: 'Two-Column Split', columns: '2-column', photo: true },
+                      { id: 'btech-fresher', name: 'B.Tech Fresher Dev', columns: '2-column', photo: true }
+                    ].filter(t => {
+                      if (filterPhoto === 'with-photo' && !t.photo) return false;
+                      if (filterPhoto === 'without-photo' && t.photo) return false;
+                      if (filterLayout === '1-column' && t.columns !== '1-column') return false;
+                      if (filterLayout === '2-column' && t.columns !== '2-column') return false;
+                      return true;
+                    }).map((temp) => (
+                      <div 
+                        key={temp.id}
+                        onClick={() => handleStyleChange('templateId', temp.id as typeof style.templateId)}
+                        className={`group relative cursor-pointer border rounded-2xl p-3 bg-neutral-950 transition-all flex flex-col justify-between ${
+                          style.templateId === temp.id 
+                            ? 'border-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.2)]' 
+                            : 'border-neutral-900 hover:border-neutral-800'
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <span className="text-[10px] text-neutral-500 uppercase font-black tracking-wider block">
+                            {temp.columns.replace('-', ' ')}
+                          </span>
+                          <span className="font-bold text-xs text-white block">
+                            {temp.name}
+                          </span>
+                        </div>
+
+                        {/* Interactive miniature preview block representing card wireframe */}
+                        <div className="w-full aspect-[4/5] border border-neutral-900 rounded-lg p-2.5 bg-neutral-900/60 flex flex-col space-y-1 my-3 relative overflow-hidden group-hover:bg-neutral-900 transition-colors">
+                          <div className="h-2 bg-neutral-800 w-2/3 rounded"></div>
+                          <div className="h-1 bg-neutral-850 w-full rounded"></div>
+                          <div className="h-1 bg-neutral-850 w-full rounded"></div>
+                          <div className="h-1 bg-neutral-850 w-3/4 rounded"></div>
+                          {temp.photo && (
+                            <div className="absolute top-2.5 right-2.5 h-6 w-6 rounded-full bg-neutral-750 border border-neutral-800 flex items-center justify-center text-[8px]">
+                              👤
+                            </div>
+                          )}
+                          <div className="flex-1"></div>
+                          <div className="h-1 bg-neutral-850 w-full rounded"></div>
+                          <div className="h-1 bg-neutral-850 w-5/6 rounded"></div>
+
+                          {/* Hover Overlay Zoom Icon */}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div className="p-2 bg-neutral-950/80 rounded-full border border-neutral-800 text-white text-[10px]">
+                              🔍 Select
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Primary choice button */}
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStyleChange('templateId', temp.id as typeof style.templateId);
+                          }}
+                          className={`w-full py-1.5 text-[9px] uppercase tracking-widest font-black rounded-lg transition-all ${
+                            style.templateId === temp.id 
+                              ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md' 
+                              : 'bg-neutral-900 hover:bg-neutral-850 text-neutral-400'
+                          }`}
+                        >
+                          Choose template
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Font Customization Column */}
+                <div className="space-y-4 pt-4 border-t border-neutral-900">
+                  <label className="text-[10px] uppercase font-bold tracking-widest text-neutral-500">Font Family</label>
+                  <select
+                    value={style.fontFamily}
+                    onChange={(e) => handleStyleChange('fontFamily', e.target.value as ResumeStyle['fontFamily'])}
+                    className="w-full bg-neutral-950 border border-neutral-900 rounded-lg py-2.5 px-3 text-xs font-medium text-neutral-300 focus:outline-none focus:border-neutral-800 transition-all cursor-pointer"
+                  >
+                    <option value="sans">Geist Sans (Default)</option>
+                    <option value="serif">Georgia Serif</option>
+                    <option value="mono">Fira Code</option>
+                    <option value="inter">Inter (Modern Sans)</option>
+                    <option value="roboto">Roboto (Clean Sans)</option>
+                    <option value="open-sans">Open Sans</option>
+                    <option value="lato">Lato</option>
+                    <option value="montserrat">Montserrat (Elegant Sans)</option>
+                    <option value="playfair">Playfair Display (Luxury Serif)</option>
+                    <option value="merriweather">Merriweather</option>
+                    <option value="lora">Lora</option>
+                    <option value="pt-serif">PT Serif</option>
+                    <option value="source-serif">Source Serif</option>
+                    <option value="source-code">Source Code Pro</option>
+                    <option value="jetbrains">JetBrains Mono</option>
+                    <option value="outfit">Outfit (Geometric Sans)</option>
+                    <option value="arvo">Arvo (Bold Serif)</option>
+                    <option value="oswald">Oswald (Display)</option>
+                    <option value="raleway">Raleway</option>
+                    <option value="nunito">Nunito</option>
+                    <option value="garamond">EB Garamond (Classic Serif)</option>
+                    <option value="cinzel">Cinzel</option>
+                    <option value="cardo">Cardo</option>
+                    <option value="cabin">Cabin</option>
+                    <option value="inconsolata">Inconsolata</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 10: Preview & Export */}
+            {step === 10 && (
+              <div className="space-y-6 text-left">
+                <h3 className="text-xs uppercase tracking-widest text-neutral-500 font-bold mb-2">Final Review</h3>
+                <p className="text-[11px] text-neutral-500 leading-normal">
+                  Your resume has been saved automatically. Verify styling coordinates on the right sheet. Choose an export format.
+                </p>
+
+                <div className="space-y-3">
+                  {/* Download PDF */}
+                  <button 
+                    onClick={handleDownloadPdf}
+                    className="w-full py-3 bg-white text-black hover:bg-neutral-200 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Download PDF</span>
+                  </button>
+
+                  {/* Download DOCX */}
+                  <button 
+                    onClick={handleDownloadDocx}
+                    className="w-full py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Download className="h-4 w-4 text-purple-400" />
+                    <span>Download Document (DOCX)</span>
+                  </button>
+                  
+                  {/* Generate Share Link */}
+                  <button 
+                    onClick={() => setShowShareModal(true)}
+                    className="w-full py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    <span>Generate Share Link &amp; QR</span>
+                  </button>
+
+                  {/* Export Plain Text */}
+                  <button 
+                    onClick={handleExportTxt}
+                    className="w-full py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <FileCheck className="h-4 w-4" />
+                    <span>Export Plain Text (TXT)</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Stepper Buttons Footer */}
+          <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-neutral-900 bg-neutral-950/80 backdrop-blur flex justify-between">
+            <button
+              onClick={handleBackStep}
+              disabled={step === 1}
+              className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 disabled:opacity-30 border border-neutral-800 rounded text-xs font-bold uppercase tracking-wider flex items-center space-x-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+
+            {step < 10 ? (
+              <button
+                onClick={handleNextStep}
+                className="px-4 py-2.5 bg-white text-black hover:bg-neutral-200 rounded text-xs font-bold uppercase tracking-wider flex items-center space-x-1"
+              >
+                <span>Next</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleDownloadPdf}
+                className="px-5 py-2.5 bg-white text-black hover:bg-neutral-200 rounded text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Finish & Print</span>
+              </button>
+            )}
+          </div>
+
+        </div>
+
+        {/* Right Column: Live Sheet Preview */}
+        <div className={cn(
+          "flex-1 bg-neutral-950 overflow-y-auto p-4 sm:p-8 relative justify-center items-start min-w-0 sm:min-w-[360px]",
+          mobileViewTab === 'editor' ? 'hidden lg:flex' : 'flex'
+        )}>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
+
+          <div className="relative z-10 w-full max-w-[820px] shadow-[0_20px_60px_rgba(0,0,0,0.7)] print:shadow-none print:w-full print:max-w-none origin-top transition-transform duration-300">
+              <ResumeTemplate ref={resumeRef} data={activeResume} />
+          </div>
+        </div>
+
+      </div>
+
+      {/* Share / Export Modal Overlay */}
+      {showShareModal && (
+        <div className="no-print fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md glass-panel border border-neutral-900 rounded-2xl p-6 relative">
+            <button 
+              onClick={() => setShowShareModal(false)}
+              className="absolute top-4 right-4 text-neutral-500 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <h3 className="font-bold text-sm uppercase tracking-wider mb-2">Share & Export Resume</h3>
+            <p className="text-[11px] text-neutral-500 leading-normal mb-6">
+              Generate share links, access simulated QR codes, or export standard plain text files.
+            </p>
+
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400">Shareable Web Link</label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={`https://mira-resume.io/share/${activeResume.id}`} 
+                    readOnly 
+                    className="text-xs bg-neutral-900 border-neutral-850 h-9" 
+                  />
+                  <button 
+                    onClick={handleCopyLink}
+                    className="px-4 bg-white text-black hover:bg-neutral-200 text-xs font-bold rounded"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 items-center">
+                <div className="space-y-1.5">
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold block">Scannable QR Code</span>
+                  <div className="h-28 w-28 bg-white p-1 rounded-lg flex items-center justify-center border border-neutral-800">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://mira-resume.io/share/${activeResume.id}`)}`} 
+                      alt="Resume Share QR Code"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold block">Document Exports</span>
+                  <button 
+                    onClick={handleExportTxt}
+                    className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-850 text-xs font-semibold rounded text-neutral-300"
+                  >
+                    Export Plain Text (TXT)
+                  </button>
+                  <button 
+                    onClick={() => {
+                      handleDownloadDocx();
+                      setShowShareModal(false);
+                    }}
+                    className="w-full py-2 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 text-xs font-semibold rounded text-neutral-300"
+                  >
+                    Export MS Word (DOCX)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Interactive Style & Color Wizard Modal */}
+      {showStyleWizardModal && (
+        <div className="no-print fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-neutral-950 text-white rounded-[2rem] p-8 relative shadow-2xl overflow-hidden border border-purple-900/30">
+            {/* Background glowing ambient light */}
+            <div className="absolute top-0 right-0 h-40 w-40 bg-purple-500/10 rounded-full blur-[80px] pointer-events-none z-0"></div>
+            <div className="absolute bottom-0 left-0 h-40 w-40 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none z-0"></div>
+
+            {/* Header controls */}
+            <div className="relative z-10 flex justify-between items-center mb-2">
+              {wizardStep > 1 ? (
+                <button 
+                  onClick={() => setWizardStep(prev => prev - 1)}
+                  className="p-1.5 text-neutral-400 hover:text-white rounded-full hover:bg-neutral-900 transition-colors"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              ) : (
+                <div className="w-8"></div>
+              )}
+
+              {/* Progress paginator dots */}
+              <div className="flex items-center space-x-2">
+                {[1, 2, 3, 4, 5, 6].map((stepNum) => (
+                  <div 
+                    key={stepNum} 
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      wizardStep === stepNum ? 'bg-purple-500 w-4' : 'bg-neutral-800 w-2'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <button 
+                onClick={() => setShowStyleWizardModal(false)}
+                className="p-1.5 text-neutral-400 hover:text-white rounded-full hover:bg-neutral-900 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* STEP 1: Include Photo */}
+            {wizardStep === 1 && (
+              <div className="relative z-10 space-y-6 text-center py-4">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-extrabold tracking-tight text-white">Do you want to include your photo?</h3>
+                  <p className="text-xs text-neutral-400">This is standard practice in some regions and industries.</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 max-w-md mx-auto pt-2">
+                  <button 
+                    onClick={() => setWizardPhoto('no')}
+                    className={`border rounded-2xl p-5 bg-neutral-900 text-left transition-all ${
+                      wizardPhoto === 'no' 
+                        ? 'border-purple-600 ring-2 ring-purple-900/40 scale-[1.02]' 
+                        : 'border-neutral-800 hover:border-neutral-750'
+                    }`}
+                  >
+                    <div className="font-bold text-xs uppercase tracking-wider text-neutral-350 text-center mb-4">No photo</div>
+                    <div className="w-full aspect-[4/5] border border-neutral-800 rounded-xl p-3 bg-neutral-950 flex flex-col space-y-1.5 relative overflow-hidden">
+                      <div className="h-3 bg-neutral-800 w-1/2 rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-5/6 rounded"></div>
+                      <div className="flex-1"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setWizardPhoto('yes')}
+                    className={`border rounded-2xl p-5 bg-neutral-900 text-left transition-all ${
+                      wizardPhoto === 'yes' 
+                        ? 'border-purple-600 ring-2 ring-purple-900/40 scale-[1.02]' 
+                        : 'border-neutral-800 hover:border-neutral-750'
+                    }`}
+                  >
+                    <div className="font-bold text-xs uppercase tracking-wider text-neutral-350 text-center mb-4">Photo</div>
+                    <div className="w-full aspect-[4/5] border border-neutral-800 rounded-xl p-3 bg-neutral-950 flex flex-col space-y-1.5 relative overflow-hidden">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 font-bold text-[10px]">
+                          👤
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="h-2.5 bg-neutral-800 w-3/4 rounded"></div>
+                          <div className="h-1.5 bg-neutral-900 w-1/2 rounded"></div>
+                        </div>
+                      </div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-5/6 rounded"></div>
+                      <div className="flex-1"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="pt-4 flex justify-end">
+                  <button 
+                    onClick={() => setWizardStep(2)}
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.3)] flex items-center space-x-1"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Pick Accent Color */}
+            {wizardStep === 2 && (
+              <div className="relative z-10 space-y-6 text-center py-4">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-extrabold tracking-tight text-white">Pick a color</h3>
+                  <p className="text-xs text-neutral-400">We&apos;ll use this to accent your resume—change colors anytime.</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-6 max-w-sm mx-auto pt-6 pb-2">
+                  {[
+                    { hex: '#333333', name: 'Charcoal' },
+                    { hex: '#b5a69a', name: 'Beige' },
+                    { hex: '#1e3a8a', name: 'Dark Navy' },
+                    { hex: '#3b82f6', name: 'Soft Blue' },
+                    { hex: '#06b6d4', name: 'Cyan' },
+                    { hex: '#10b981', name: 'Emerald' },
+                    { hex: '#f59e0b', name: 'Orange' },
+                    { hex: '#ef4444', name: 'Red' },
+                    { hex: '#8b5cf6', name: 'Purple' }
+                  ].map((colorObj) => (
+                    <button 
+                      key={colorObj.hex}
+                      onClick={() => setWizardColor(colorObj.hex)}
+                      className={`h-14 w-14 rounded-full mx-auto relative transition-all ${
+                        wizardColor === colorObj.hex 
+                          ? 'ring-4 ring-purple-900/60 scale-110 shadow-lg' 
+                          : 'hover:scale-105 border border-neutral-800'
+                      }`}
+                      style={{ backgroundColor: colorObj.hex }}
+                      title={colorObj.name}
+                    >
+                      {wizardColor === colorObj.hex && (
+                        <div className="absolute inset-0 flex items-center justify-center text-white text-lg font-bold">
+                          ✓
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="pt-4 flex justify-between">
+                  <button 
+                    onClick={() => setWizardStep(1)}
+                    className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-neutral-800 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={() => setWizardStep(3)}
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.3)] flex items-center space-x-1"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Page Layout Style */}
+            {wizardStep === 3 && (
+              <div className="relative z-10 space-y-6 text-center py-4">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-extrabold tracking-tight text-white">Which layout do you prefer?</h3>
+                  <p className="text-xs text-neutral-400">One column saves space; two columns look modern and organized.</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 max-w-md mx-auto pt-2">
+                  <button 
+                    onClick={() => setWizardLayout('one-column')}
+                    className={`border rounded-2xl p-5 bg-neutral-900 text-left transition-all ${
+                      wizardLayout === 'one-column' 
+                        ? 'border-purple-600 ring-2 ring-purple-900/40 scale-[1.02]' 
+                        : 'border-neutral-800 hover:border-neutral-750'
+                    }`}
+                  >
+                    <div className="font-bold text-xs uppercase tracking-wider text-neutral-350 text-center mb-4">One column</div>
+                    <div className="w-full aspect-[4/5] border border-neutral-800 rounded-xl p-3 bg-neutral-950 flex flex-col space-y-1.5 relative overflow-hidden">
+                      <div className="h-3 bg-neutral-800 w-2/3 rounded mb-2"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-5/6 rounded"></div>
+                      <div className="h-3 bg-neutral-800 w-1/2 rounded mt-3 mb-2"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                      <div className="h-1.5 bg-neutral-900 w-full rounded"></div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setWizardLayout('two-column')}
+                    className={`border rounded-2xl p-5 bg-neutral-900 text-left transition-all ${
+                      wizardLayout === 'two-column' 
+                        ? 'border-purple-600 ring-2 ring-purple-900/40 scale-[1.02]' 
+                        : 'border-neutral-800 hover:border-neutral-750'
+                    }`}
+                  >
+                    <div className="font-bold text-xs uppercase tracking-wider text-neutral-350 text-center mb-4">Two columns</div>
+                    <div className="w-full aspect-[4/5] border border-neutral-800 rounded-xl bg-neutral-950 flex overflow-hidden relative">
+                      {/* Sidebar */}
+                      <div className="w-1/3 bg-neutral-900 p-2 flex flex-col space-y-2 border-r border-neutral-800">
+                        <div className="w-6 h-6 rounded-full bg-neutral-850 self-center"></div>
+                        <div className="h-2 bg-neutral-800 w-full rounded"></div>
+                        <div className="h-1 bg-neutral-850 w-full rounded"></div>
+                        <div className="h-1 bg-neutral-850 w-5/6 rounded"></div>
+                      </div>
+                      {/* Main body */}
+                      <div className="flex-1 p-2 flex flex-col space-y-2">
+                        <div className="h-2.5 bg-neutral-800 w-2/3 rounded"></div>
+                        <div className="h-1 bg-neutral-900 w-full rounded"></div>
+                        <div className="h-1 bg-neutral-900 w-full rounded"></div>
+                        <div className="h-2.5 bg-neutral-800 w-1/2 rounded mt-2"></div>
+                        <div className="h-1 bg-neutral-900 w-full rounded"></div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                <div className="pt-4 flex justify-between">
+                  <button 
+                    onClick={() => setWizardStep(2)}
+                    className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-neutral-800 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={() => setWizardStep(4)}
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.3)] flex items-center space-x-1"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Resume Field / Industry */}
+            {wizardStep === 4 && (
+              <div className="relative z-10 space-y-6 text-center py-4">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-extrabold tracking-tight text-white">What field is this resume for?</h3>
+                  <p className="text-xs text-neutral-400">Check all that apply or skip.</p>
+                </div>
+
+                <div className="max-h-52 overflow-y-auto max-w-md mx-auto border border-neutral-800 rounded-2xl bg-neutral-950 p-4 space-y-2.5 text-left">
+                  {[
+                    'Business & Finance',
+                    'Care Services',
+                    'Community & Social',
+                    'Design & Media',
+                    'Education & Learning',
+                    'Engineering & Technology',
+                    'Hospitality & Tourism',
+                    'Sales & Marketing'
+                  ].map((fieldStr) => {
+                    const isChecked = wizardIndustries.includes(fieldStr);
+                    return (
+                      <label 
+                        key={fieldStr} 
+                        className={`flex items-center space-x-3 p-2.5 rounded-xl cursor-pointer transition-colors border ${
+                          isChecked 
+                            ? 'bg-purple-950/20 text-purple-300 border-purple-800/40 font-bold' 
+                            : 'bg-transparent border-transparent hover:bg-neutral-900 text-neutral-400'
+                        }`}
+                      >
+                        <input 
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setWizardIndustries(prev => [...prev, fieldStr]);
+                            } else {
+                              setWizardIndustries(prev => prev.filter(item => item !== fieldStr));
+                            }
+                          }}
+                          className="h-4 w-4 text-purple-600 bg-neutral-900 border-neutral-800 rounded focus:ring-purple-500 cursor-pointer"
+                        />
+                        <span className="text-xs">{fieldStr}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-4 flex justify-between items-center">
+                  <button 
+                    onClick={() => setWizardStep(3)}
+                    className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-neutral-800 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={() => setWizardStep(5)}
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.3)] flex items-center space-x-1"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Choose a Template */}
+            {wizardStep === 5 && (
+              <div className="relative z-10 space-y-4 text-center py-2">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-extrabold tracking-tight text-white">Choose your resume template</h3>
+                  <p className="text-xs text-neutral-400">Select from our ATS-optimized layouts or build your own custom design.</p>
+                </div>
+
+                {/* Prominent Create Custom Template Banner */}
+                <div className="flex items-center justify-between bg-gradient-to-r from-purple-950/80 via-indigo-950/50 to-neutral-950 border border-purple-800/60 rounded-2xl p-3 text-left shadow-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 rounded-xl bg-purple-900/60 border border-purple-700/50 flex items-center justify-center text-purple-300 shrink-0">
+                      <Sparkles className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black text-white uppercase tracking-wider">Need A Custom Template?</h4>
+                      <p className="text-[10px] text-purple-300 font-medium mt-0.5">Build a custom layout for your specific job requirements</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomTemplateModal(true)}
+                    className="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.4)] shrink-0 flex items-center space-x-1 cursor-pointer"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>+ Custom Template</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[250px] overflow-y-auto pr-1 text-left">
+                  {/* Build Custom Template Card */}
+                  <div 
+                    onClick={() => setShowCustomTemplateModal(true)}
+                    className="cursor-pointer border border-dashed border-purple-500/80 hover:border-purple-400 rounded-2xl p-3 bg-purple-950/20 hover:bg-purple-950/40 transition-all flex flex-col justify-between relative group text-left shadow-lg shadow-purple-950/30"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-purple-900/80 text-purple-200 rounded">
+                          + BUILD YOUR OWN
+                        </span>
+                        <Sparkles className="h-3.5 w-3.5 text-purple-400 group-hover:rotate-12 transition-transform" />
+                      </div>
+                      <h4 className="text-xs font-black text-white mt-1">Create Custom Template</h4>
+                      <p className="text-[9px] text-neutral-300 mt-0.5 font-medium">Design layout to your exact requirements</p>
+                    </div>
+                    <div className="w-full h-12 border border-dashed border-purple-800/80 rounded-lg mt-2 bg-neutral-950/80 p-2 flex flex-col items-center justify-center space-y-1 group-hover:border-purple-500 transition-colors">
+                      <Plus className="h-4 w-4 text-purple-400" />
+                      <span className="text-[8px] font-bold text-purple-300 uppercase tracking-widest">+ Custom Layout</span>
+                    </div>
+                  </div>
+
+                  {[
+                    ...customTemplates,
+                    { id: 'modern', name: 'Modern Clean', badge: 'Popular', desc: 'Single-column clean design' },
+                    { id: 'btech-fresher', name: 'Silicon Valley SDE', badge: 'ATS 100%', desc: 'Engineering & Code focus' },
+                    { id: 'executive', name: 'Executive Serif', badge: 'Leadership', desc: 'Dignified typography' },
+                    { id: 'minimal', name: 'Minimal Plain', badge: 'Simple', desc: 'Generous white space' },
+                    { id: 'creative', name: 'Creative Profile', badge: 'Portfolio', desc: 'Design & Product' },
+                    { id: 'ats-friendly', name: 'ATS Structural', badge: 'Optimal', desc: 'Machine readable' },
+                    { id: 'corporate', name: 'Corporate Grid', badge: 'Business', desc: 'Structured sections' },
+                    { id: 'luxury', name: 'Luxury Border', badge: 'Executive', desc: 'Refined accenting' },
+                    { id: 'academic', name: 'Academic Mono', badge: 'Research', desc: 'Monospace aesthetic' }
+                  ].map((temp) => {
+                    const isSelected = wizardTemplate === temp.id;
+                    return (
+                      <div 
+                        key={temp.id}
+                        onClick={() => setWizardTemplate(temp.id as typeof style.templateId)}
+                        className={`cursor-pointer border rounded-2xl p-3 bg-neutral-900/90 transition-all flex flex-col justify-between relative ${
+                          isSelected 
+                            ? 'border-purple-500 ring-2 ring-purple-900/40 bg-purple-950/20 scale-[1.02]' 
+                            : 'border-neutral-800 hover:border-neutral-700'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 bg-neutral-800 text-purple-300 rounded">
+                              {temp.badge}
+                            </span>
+                            {isSelected && <Check className="h-3.5 w-3.5 text-purple-400" />}
+                          </div>
+                          <h4 className="text-xs font-bold text-white">{temp.name}</h4>
+                          <p className="text-[9px] text-neutral-400 mt-0.5 font-medium">{temp.desc}</p>
+                        </div>
+                        <div className="w-full h-12 border border-neutral-800/80 rounded-lg mt-2 bg-neutral-950/80 p-1.5 flex flex-col space-y-1">
+                          <div className="h-1.5 bg-neutral-800 w-1/2 rounded"></div>
+                          <div className="h-1 bg-neutral-900 w-full rounded"></div>
+                          <div className="h-1 bg-neutral-900 w-3/4 rounded"></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2 flex justify-between items-center">
+                  <button 
+                    onClick={() => setWizardStep(4)}
+                    className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-neutral-800 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={() => setWizardStep(6)}
+                    className="px-6 py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_12px_rgba(168,85,247,0.3)] flex items-center space-x-1"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6: Choose Font & Typography */}
+            {wizardStep === 6 && (
+              <div className="relative z-10 space-y-6 text-center py-2">
+                <div className="space-y-1">
+                  <h3 className="text-xl font-extrabold tracking-tight text-white">Choose Font &amp; Typography</h3>
+                  <p className="text-xs text-neutral-400">Select your font style and text size for your resume.</p>
+                </div>
+
+                {/* Font Family Section */}
+                <div className="space-y-2 text-left">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-neutral-400 block">Font Family</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { id: 'sans', name: 'Inter (Sans)', sample: 'Aa • Modern Clean', styleClass: 'font-sans' },
+                      { id: 'serif', name: 'Playfair (Serif)', sample: 'Aa • Executive Serif', styleClass: 'font-serif' },
+                      { id: 'mono', name: 'Fira (Mono)', sample: 'Aa • Dev Monospace', styleClass: 'font-mono' },
+                      { id: 'roboto', name: 'Roboto', sample: 'Aa • Sharp Balanced', styleClass: 'font-sans font-medium' },
+                      { id: 'outfit', name: 'Outfit', sample: 'Aa • Contemporary', styleClass: 'font-sans font-bold' },
+                      { id: 'montserrat', name: 'Montserrat', sample: 'Aa • Bold Geometric', styleClass: 'font-sans tracking-wide' }
+                    ].map((fontItem) => {
+                      const isSelected = wizardFontFamily === fontItem.id;
+                      return (
+                        <button
+                          key={fontItem.id}
+                          type="button"
+                          onClick={() => setWizardFontFamily(fontItem.id as typeof style.fontFamily)}
+                          className={`p-3 rounded-2xl border text-left transition-all ${
+                            isSelected 
+                              ? 'border-purple-500 bg-purple-950/30 ring-2 ring-purple-900/40 text-purple-200' 
+                              : 'border-neutral-800 bg-neutral-900/60 hover:border-neutral-700 text-neutral-400'
+                          }`}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-white">{fontItem.name}</span>
+                            {isSelected && <Check className="h-3.5 w-3.5 text-purple-400" />}
+                          </div>
+                          <span className={`text-[10px] mt-1 block opacity-80 ${fontItem.styleClass}`}>
+                            {fontItem.sample}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Font Size Section */}
+                <div className="space-y-2 text-left pt-1">
+                  <label className="text-[10px] uppercase font-black tracking-widest text-neutral-400 block">Font Size</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { id: 'sm', label: 'Small', desc: 'Fits maximum content' },
+                      { id: 'md', label: 'Medium', desc: 'Standard balance' },
+                      { id: 'lg', label: 'Large', desc: 'High readability' }
+                    ].map((sizeItem) => {
+                      const isSelected = wizardFontSize === sizeItem.id;
+                      return (
+                        <button
+                          key={sizeItem.id}
+                          type="button"
+                          onClick={() => setWizardFontSize(sizeItem.id as typeof style.fontSize)}
+                          className={`p-2.5 rounded-xl border text-center transition-all ${
+                            isSelected 
+                              ? 'border-purple-500 bg-purple-950/30 text-white font-bold' 
+                              : 'border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:border-neutral-700'
+                          }`}
+                        >
+                          <span className="text-xs block">{sizeItem.label}</span>
+                          <span className="text-[9px] text-neutral-500 block mt-0.5">{sizeItem.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="pt-4 flex justify-between items-center">
+                  <button 
+                    onClick={() => setWizardStep(5)}
+                    className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 border border-neutral-800 font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Back
+                  </button>
+                  <button 
+                    onClick={handleApplyWizardStyle}
+                    className="px-8 py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_4px_15px_rgba(168,85,247,0.4)]"
+                  >
+                    SEE MY RESULTS
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Build Custom Requirement Template Modal */}
+      <AnimatePresence>
+        {showCustomTemplateModal && (
+          <div className="no-print fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-neutral-950 text-white rounded-3xl p-6 relative border border-purple-900/50 shadow-2xl space-y-4 text-left overflow-hidden">
+              <div className="flex items-center justify-between border-b border-neutral-900 pb-3">
+                <div className="flex items-center space-x-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-purple-950 border border-purple-800/40 flex items-center justify-center text-purple-400">
+                    <Sparkles className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-white">Create Custom Template</h3>
+                    <p className="text-[10px] text-neutral-400">Design layout for your exact position requirements</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowCustomTemplateModal(false)}
+                  className="p-1 text-neutral-400 hover:text-white rounded-lg hover:bg-neutral-900"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Form Controls */}
+              <div className="space-y-3.5 text-xs">
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">
+                    Template Name <span className="text-purple-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Stanford SDE II / Custom Latex Layout"
+                    value={customTemplateName}
+                    onChange={(e) => setCustomTemplateName(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-neutral-600 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">
+                    Column Structure
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: '1-column', name: 'Single Column', desc: '100% ATS Parsing Focus' },
+                      { id: '2-column', name: 'Two-Column Split', desc: 'Modern Sidebar & Body' }
+                    ].map((col) => (
+                      <button
+                        key={col.id}
+                        type="button"
+                        onClick={() => setCustomTemplateColumns(col.id as any)}
+                        className={`p-2.5 rounded-xl border text-left transition-all ${
+                          customTemplateColumns === col.id
+                            ? 'border-purple-500 bg-purple-950/30 text-white font-bold'
+                            : 'border-neutral-800 bg-neutral-900 text-neutral-400'
+                        }`}
+                      >
+                        <div className="text-xs">{col.name}</div>
+                        <div className="text-[9px] text-neutral-500 mt-0.5">{col.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">
+                    Header Layout Style
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'left', label: 'Left Aligned' },
+                      { id: 'centered', label: 'Centered' },
+                      { id: 'banner', label: 'Dark Banner' }
+                    ].map((hdr) => (
+                      <button
+                        key={hdr.id}
+                        type="button"
+                        onClick={() => setCustomTemplateHeader(hdr.id as any)}
+                        className={`p-2 rounded-lg border text-center transition-all text-xs ${
+                          customTemplateHeader === hdr.id
+                            ? 'border-purple-500 bg-purple-950/40 text-purple-200 font-bold'
+                            : 'border-neutral-800 bg-neutral-900 text-neutral-400'
+                        }`}
+                      >
+                        {hdr.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">
+                    Primary Accent Color
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    {['#8b5cf6', '#3b82f6', '#10b981', '#ef4444', '#f59e0b', '#06b6d4', '#1e293b'].map((hex) => (
+                      <button
+                        key={hex}
+                        type="button"
+                        onClick={() => setCustomTemplateColor(hex)}
+                        className={`h-7 w-7 rounded-full border transition-transform ${
+                          customTemplateColor === hex ? 'ring-2 ring-white scale-110 border-purple-500' : 'border-neutral-800 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">
+                    Requirement Notes / Custom Instructions
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Specify special requirements (e.g. bold section dividers, compact ATS font, highlighted skills section)..."
+                    value={customTemplateNotes}
+                    onChange={(e) => setCustomTemplateNotes(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl p-2 text-xs text-white placeholder:text-neutral-600 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex justify-end space-x-2 pt-2 border-t border-neutral-900">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomTemplateModal(false)}
+                  className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 rounded-xl text-xs font-bold uppercase tracking-wider"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreateCustomTemplate}
+                  className="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_12px_rgba(168,85,247,0.4)]"
+                >
+                  Create & Select
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
