@@ -400,13 +400,14 @@ export default function BuilderPage() {
     }
 
     if (currentStep === 2) {
-      if (!summary.trim()) {
+      const activeSummary = (localSummary || summary || '').trim();
+      if (!activeSummary) {
         newErrors.summary = "Professional summary is required.";
         isValid = false;
-      } else if (summary.trim().length < 50) {
-        newErrors.summary = "Summary should be at least 50 characters long.";
-        isValid = false;
       }
+      updateResume({
+        summary: localSummary
+      });
     }
 
     if (currentStep === 3 && experience.length > 0) {
@@ -640,6 +641,12 @@ export default function BuilderPage() {
     try {
       const generated = await generateSummaryApi(targetJobTitle, tone);
       setLocalSummary(generated);
+      setErrors(prev => {
+        if (!prev.summary) return prev;
+        const copy = { ...prev };
+        delete copy.summary;
+        return copy;
+      });
       updateResume({ summary: generated, personalInfo: localPersonalInfo });
       toast(`AI Summary generated successfully in ${tone} tone.`);
     } catch (err) {
@@ -650,6 +657,12 @@ export default function BuilderPage() {
         tone
       });
       setLocalSummary(generated);
+      setErrors(prev => {
+        if (!prev.summary) return prev;
+        const copy = { ...prev };
+        delete copy.summary;
+        return copy;
+      });
       updateResume({ summary: generated, personalInfo: localPersonalInfo });
     } finally {
       setAiGenerating(false);
