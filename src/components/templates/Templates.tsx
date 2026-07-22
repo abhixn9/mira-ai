@@ -86,43 +86,41 @@ export const ResumeTemplate = forwardRef<HTMLDivElement, TemplateProps>(({ data 
   const { style } = data;
 
   const personalInfo = {
-    name: data.personalInfo?.name || SAMPLE_FALLBACK.name,
-    jobTitle: data.personalInfo?.jobTitle || SAMPLE_FALLBACK.jobTitle,
-    email: data.personalInfo?.email || SAMPLE_FALLBACK.email,
-    phone: data.personalInfo?.phone || SAMPLE_FALLBACK.phone,
-    address: data.personalInfo?.address || SAMPLE_FALLBACK.address,
-    linkedin: data.personalInfo?.linkedin || SAMPLE_FALLBACK.linkedin,
-    github: data.personalInfo?.github || SAMPLE_FALLBACK.github,
-    portfolio: data.personalInfo?.portfolio || SAMPLE_FALLBACK.portfolio,
+    name: data.personalInfo?.name || '',
+    jobTitle: data.personalInfo?.jobTitle || '',
+    email: data.personalInfo?.email || '',
+    phone: data.personalInfo?.phone || '',
+    address: data.personalInfo?.address || '',
+    linkedin: data.personalInfo?.linkedin || '',
+    github: data.personalInfo?.github || '',
+    portfolio: data.personalInfo?.portfolio || '',
     photo: data.personalInfo?.photo || ''
   };
 
-  const summary = data.summary || SAMPLE_FALLBACK.summary;
+  const summary = data.summary || '';
 
   const rawExp = (data.experience || []).map(exp => ({
     ...exp,
     responsibilities: (exp.responsibilities || []).filter(r => r && r.trim() !== ""),
     achievements: (exp.achievements || []).filter(a => a && a.trim() !== "")
   })).filter(exp => exp.company?.trim() !== "" || exp.role?.trim() !== "");
-  const experience = rawExp.length > 0 ? rawExp : SAMPLE_FALLBACK.experience;
+  const experience = rawExp;
 
   const rawEdu = (data.education || []).filter(edu => edu.university?.trim() !== "" || edu.degree?.trim() !== "");
-  const education = rawEdu.length > 0 ? rawEdu : SAMPLE_FALLBACK.education;
+  const education = rawEdu;
 
   const rawSkills = {
     technical: (data.skills?.technical || []).filter(s => s && s.trim() !== ""),
     soft: (data.skills?.soft || []).filter(s => s && s.trim() !== ""),
     languages: (data.skills?.languages || []).filter(s => s && s.trim() !== "")
   };
-  const skills = (rawSkills.technical.length > 0 || rawSkills.soft.length > 0 || rawSkills.languages.length > 0)
-    ? rawSkills
-    : SAMPLE_FALLBACK.skills;
+  const skills = rawSkills;
 
   const rawCert = (data.certifications || []).filter(c => c.name?.trim() !== "");
-  const certifications = rawCert.length > 0 ? rawCert : SAMPLE_FALLBACK.certifications;
+  const certifications = rawCert;
 
   const rawProj = (data.projects || []).filter(p => p.title?.trim() !== "");
-  const projects = rawProj.length > 0 ? rawProj : SAMPLE_FALLBACK.projects;
+  const projects = rawProj;
 
   // Font families mapping
   const fontClass = cn(

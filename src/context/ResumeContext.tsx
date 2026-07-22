@@ -130,6 +130,9 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
                 if (r.personalInfo.name === 'Alexander Sterling' || r.personalInfo.name === 'Guest Demo' || r.personalInfo.name === 'Demo User') {
                   r.personalInfo.name = '';
                 }
+                if (r.personalInfo.jobTitle === 'Senior Software Engineer / Tech Lead' || r.personalInfo.jobTitle === 'Senior Full Stack Architect') {
+                  r.personalInfo.jobTitle = '';
+                }
                 if (r.personalInfo.email === 'alexander@vercel.com' || r.personalInfo.email === 'guest@mira-ai.com' || r.personalInfo.email === 'alexander.sterling@design.io') {
                   r.personalInfo.email = '';
                 }
@@ -138,6 +141,15 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
                 }
                 if (r.personalInfo.address === 'San Francisco, CA' || r.personalInfo.address === 'Manhattan, New York, NY') {
                   r.personalInfo.address = '';
+                }
+                if (r.personalInfo.linkedin && (r.personalInfo.linkedin.includes('alexander') || r.personalInfo.linkedin.includes('alex-sterling'))) {
+                  r.personalInfo.linkedin = '';
+                }
+                if (r.personalInfo.github && (r.personalInfo.github.includes('alexander') || r.personalInfo.github.includes('alexsterling'))) {
+                  r.personalInfo.github = '';
+                }
+                if (r.personalInfo.portfolio && r.personalInfo.portfolio.includes('alexander')) {
+                  r.personalInfo.portfolio = '';
                 }
               }
               return r;

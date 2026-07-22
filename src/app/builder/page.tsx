@@ -220,6 +220,35 @@ export default function BuilderPage() {
   const { activeResume, updateResume, builderStep: step, setBuilderStep: setStep } = useResume();
   const resumeRef = useRef<HTMLDivElement>(null);
 
+  // Local Personal Info state buffer for 100% fluid mobile typing
+  const [localPersonalInfo, setLocalPersonalInfo] = useState({
+    name: activeResume?.personalInfo?.name || '',
+    jobTitle: activeResume?.personalInfo?.jobTitle || '',
+    email: activeResume?.personalInfo?.email || '',
+    phone: activeResume?.personalInfo?.phone || '',
+    address: activeResume?.personalInfo?.address || '',
+    photo: activeResume?.personalInfo?.photo || '',
+    linkedin: activeResume?.personalInfo?.linkedin || '',
+    github: activeResume?.personalInfo?.github || '',
+    portfolio: activeResume?.personalInfo?.portfolio || ''
+  });
+
+  useEffect(() => {
+    if (activeResume?.personalInfo) {
+      setLocalPersonalInfo({
+        name: activeResume.personalInfo.name || '',
+        jobTitle: activeResume.personalInfo.jobTitle || '',
+        email: activeResume.personalInfo.email || '',
+        phone: activeResume.personalInfo.phone || '',
+        address: activeResume.personalInfo.address || '',
+        photo: activeResume.personalInfo.photo || '',
+        linkedin: activeResume.personalInfo.linkedin || '',
+        github: activeResume.personalInfo.github || '',
+        portfolio: activeResume.personalInfo.portfolio || ''
+      });
+    }
+  }, [activeResume?.id]);
+
   const [aiGenerating, setAiGenerating] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -467,18 +496,20 @@ export default function BuilderPage() {
   };
 
   const handleClearAllData = () => {
+    const emptyInfo = {
+      name: '',
+      jobTitle: '',
+      email: '',
+      phone: '',
+      linkedin: '',
+      github: '',
+      portfolio: '',
+      address: '',
+      photo: ''
+    };
+    setLocalPersonalInfo(emptyInfo);
     updateResume({
-      personalInfo: {
-        name: '',
-        jobTitle: '',
-        email: '',
-        phone: '',
-        linkedin: '',
-        github: '',
-        portfolio: '',
-        address: '',
-        photo: ''
-      },
+      personalInfo: emptyInfo,
       summary: '',
       experience: [],
       education: [],
@@ -491,18 +522,20 @@ export default function BuilderPage() {
   };
 
   const handleLoadSampleData = () => {
+    const sampleInfo = {
+      name: 'Alexander Sterling',
+      jobTitle: 'Senior Software Engineer',
+      email: 'alexander@example.com',
+      phone: '(555) 019-2834',
+      linkedin: 'linkedin.com/in/alexander',
+      github: 'github.com/alexander',
+      portfolio: 'alexander.dev',
+      address: 'San Francisco, CA',
+      photo: ''
+    };
+    setLocalPersonalInfo(sampleInfo);
     updateResume({
-      personalInfo: {
-        name: 'Alexander Sterling',
-        jobTitle: 'Senior Software Engineer',
-        email: 'alexander@example.com',
-        phone: '(555) 019-2834',
-        linkedin: 'linkedin.com/in/alexander',
-        github: 'github.com/alexander',
-        portfolio: 'alexander.dev',
-        address: 'San Francisco, CA',
-        photo: ''
-      },
+      personalInfo: sampleInfo,
       summary: 'Results-oriented Senior Software Engineer with 6+ years of experience architecting web applications, designing developer tools, and optimizing cloud serverless infrastructure.',
       experience: [
         {
@@ -540,11 +573,16 @@ export default function BuilderPage() {
   };
 
   // Form Field change handlers
-  const handlePersonalInfoChange = (field: keyof typeof personalInfo, value: string) => {
+  const handlePersonalInfoChange = (field: keyof typeof localPersonalInfo, value: string) => {
+    const updated = {
+      ...localPersonalInfo,
+      [field]: value
+    };
+    setLocalPersonalInfo(updated);
     updateResume({
       personalInfo: {
         ...personalInfo,
-        [field]: value
+        ...updated
       }
     });
   };
@@ -1066,7 +1104,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Full Name</label>
                     <Input 
-                      value={personalInfo.name || ''} 
+                      value={localPersonalInfo.name || ''} 
                       onChange={(e) => handlePersonalInfoChange('name', e.target.value)} 
                       placeholder="Enter your full name" 
                     />
@@ -1075,7 +1113,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Job Title Target</label>
                     <Input 
-                      value={personalInfo.jobTitle || ''} 
+                      value={localPersonalInfo.jobTitle || ''} 
                       onChange={(e) => handlePersonalInfoChange('jobTitle', e.target.value)} 
                       placeholder="Enter job title target" 
                     />
@@ -1086,7 +1124,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                       <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Email</label>
                       <Input 
                         type="email" 
-                        value={personalInfo.email || ''} 
+                        value={localPersonalInfo.email || ''} 
                         onChange={(e) => handlePersonalInfoChange('email', e.target.value)} 
                         placeholder="Enter email address" 
                       />
@@ -1095,7 +1133,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                     <div>
                       <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Phone</label>
                       <Input 
-                        value={personalInfo.phone || ''} 
+                        value={localPersonalInfo.phone || ''} 
                         onChange={(e) => handlePersonalInfoChange('phone', e.target.value)} 
                         placeholder="Enter phone number" 
                       />
@@ -1105,7 +1143,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Address Location</label>
                     <Input 
-                      value={personalInfo.address || ''} 
+                      value={localPersonalInfo.address || ''} 
                       onChange={(e) => handlePersonalInfoChange('address', e.target.value)} 
                       placeholder="Enter location (City, Country)" 
                     />
@@ -1113,9 +1151,9 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1.5">Profile Photo</label>
                     <div className="flex gap-3 items-center">
-                      {personalInfo.photo ? (
+                      {localPersonalInfo.photo ? (
                         <div className="relative h-12 w-12 rounded-full overflow-hidden border border-neutral-800 shrink-0">
-                          <img src={personalInfo.photo} alt="Profile preview" className="h-full w-full object-cover" />
+                          <img src={localPersonalInfo.photo} alt="Profile preview" className="h-full w-full object-cover" />
                           <button 
                             type="button"
                             onClick={() => handlePersonalInfoChange('photo', '')}
@@ -1131,7 +1169,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                       )}
                       <div className="flex-1 space-y-2">
                         <Input 
-                          value={personalInfo.photo || ''} 
+                          value={localPersonalInfo.photo || ''} 
                           onChange={(e) => handlePersonalInfoChange('photo', e.target.value)} 
                           placeholder="Paste photo URL or upload file..." 
                           className="text-xs"
@@ -1169,7 +1207,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">LinkedIn URL</label>
                     <Input 
-                      value={personalInfo.linkedin || ''} 
+                      value={localPersonalInfo.linkedin || ''} 
                       onChange={(e) => handlePersonalInfoChange('linkedin', e.target.value)} 
                       placeholder="linkedin.com/in/yourname" 
                     />
@@ -1177,7 +1215,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   <div>
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">GitHub URL</label>
                     <Input 
-                      value={personalInfo.github || ''} 
+                      value={localPersonalInfo.github || ''} 
                       onChange={(e) => handlePersonalInfoChange('github', e.target.value)} 
                       placeholder="github.com/yourusername" 
                     />
