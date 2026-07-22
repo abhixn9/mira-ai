@@ -635,11 +635,7 @@ export default function BuilderPage() {
   };
 
   const handleGenerateSummary = async (tone: 'professional' | 'executive' | 'creative') => {
-    const targetJobTitle = (localPersonalInfo.jobTitle || personalInfo.jobTitle || '').trim();
-    if (!targetJobTitle) {
-      toast("Please add a Job Title target in Step 1.", "error");
-      return;
-    }
+    const targetJobTitle = (localPersonalInfo.jobTitle || personalInfo.jobTitle || 'Software Engineer').trim();
     setAiGenerating(true);
     try {
       const generated = await generateSummaryApi(targetJobTitle, tone);
@@ -715,11 +711,7 @@ export default function BuilderPage() {
   const handleEnhanceExperienceBullets = async (expId: string) => {
     const exp = experience.find(e => e.id === expId);
     if (!exp) return;
-    const targetTitle = localPersonalInfo.jobTitle || personalInfo.jobTitle;
-    if (!targetTitle) {
-      toast("Please specify a target Job Title in Step 1.", "error");
-      return;
-    }
+    const targetTitle = (localPersonalInfo.jobTitle || personalInfo.jobTitle || 'Software Engineer').trim();
     toast("AI is transforming responsibilities...", "info");
     try {
       const current = exp.responsibilities || [];
