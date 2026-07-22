@@ -425,16 +425,16 @@ export default function BuilderPage() {
       });
     }
 
-    if (currentStep === 3 && experience.length > 0) {
-      const hasEmptyExp = experience.some(exp => !exp.company.trim() || !exp.role.trim());
+    if (currentStep === 3 && localExperience.length > 0) {
+      const hasEmptyExp = localExperience.some(exp => !(exp.company || '').trim() || !(exp.role || '').trim());
       if (hasEmptyExp) {
         newErrors.experience = "All experiences must have a Company name and Role title.";
         isValid = false;
       }
     }
 
-    if (currentStep === 4 && education.length > 0) {
-      const hasEmptyEdu = education.some(edu => !edu.degree.trim() || !edu.university.trim());
+    if (currentStep === 4 && localEducation.length > 0) {
+      const hasEmptyEdu = localEducation.some(edu => !(edu.degree || '').trim() || !(edu.university || '').trim());
       if (hasEmptyEdu) {
         newErrors.education = "All education items must specify a Degree program and University.";
         isValid = false;
@@ -442,22 +442,23 @@ export default function BuilderPage() {
     }
 
     if (currentStep === 5) {
-      if (skills.technical.length === 0) {
+      const techSkills = localSkills.technical || [];
+      if (techSkills.length === 0 && !techSkillInput.trim()) {
         newErrors.skills = "Please add at least one technical skill.";
         isValid = false;
       }
     }
 
-    if (currentStep === 6 && projects.length > 0) {
-      const hasEmptyProj = projects.some(p => !p.title.trim() || !p.description.trim());
+    if (currentStep === 6 && localProjects.length > 0) {
+      const hasEmptyProj = localProjects.some(p => !(p.title || '').trim() || !(p.description || '').trim());
       if (hasEmptyProj) {
         newErrors.projects = "All projects must have a Title and Description.";
         isValid = false;
       }
     }
 
-    if (currentStep === 7 && certifications.length > 0) {
-      const hasEmptyCert = certifications.some(c => !c.name.trim() || !c.issuer.trim());
+    if (currentStep === 7 && localCertifications.length > 0) {
+      const hasEmptyCert = localCertifications.some(c => !(c.name || '').trim() || !(c.issuer || '').trim());
       if (hasEmptyCert) {
         newErrors.certifications = "All certifications must specify Name and Issuer.";
         isValid = false;
@@ -465,7 +466,8 @@ export default function BuilderPage() {
     }
 
     if (currentStep === 8) {
-      if (skills.languages.length === 0) {
+      const langs = localSkills.languages || [];
+      if (langs.length === 0 && !langInput.trim()) {
         newErrors.languages = "Please specify at least one Language.";
         isValid = false;
       }
@@ -478,17 +480,17 @@ export default function BuilderPage() {
   const handleNextStep = () => {
     const currentStep = step;
 
-    // Auto-commit any typed text in the fields before validating
+    // Auto-commit any typed text in skill/language fields before validating
     if (currentStep === 5) {
-      const updatedSkills = { ...skills };
+      const updatedSkills = { ...localSkills };
       let hasUpdates = false;
 
       if (techSkillInput.trim()) {
         const newItems = techSkillInput.split(',')
           .map(item => item.trim())
-          .filter(item => item !== '' && !skills.technical.includes(item));
+          .filter(item => item !== '' && !(localSkills.technical || []).includes(item));
         if (newItems.length > 0) {
-          updatedSkills.technical = [...updatedSkills.technical, ...newItems];
+          updatedSkills.technical = [...(localSkills.technical || []), ...newItems];
           hasUpdates = true;
         }
         setTechSkillInput('');
@@ -497,33 +499,34 @@ export default function BuilderPage() {
       if (softSkillInput.trim()) {
         const newItems = softSkillInput.split(',')
           .map(item => item.trim())
-          .filter(item => item !== '' && !skills.soft.includes(item));
+          .filter(item => item !== '' && !(localSkills.soft || []).includes(item));
         if (newItems.length > 0) {
-          updatedSkills.soft = [...updatedSkills.soft, ...newItems];
+          updatedSkills.soft = [...(localSkills.soft || []), ...newItems];
           hasUpdates = true;
         }
         setSoftSkillInput('');
       }
 
       if (hasUpdates) {
+        setLocalSkills(updatedSkills);
         updateResume({ skills: updatedSkills });
-        const newErrors = { ...errors };
-        let isValid = true;
-        if (updatedSkills.technical.length === 0) {
-          newErrors.skills = "Please add at least one technical skill.";
-          isValid = false;
-        } else {
-          delete newErrors.skills;
+      }
+    }
+
+    if (currentStep === 8) {
+      if (langInput.trim()) {
+        const newItems = langInput.split(',')
+          .map(item => item.trim())
+          .filter(item => item !== '' && !(localSkills.languages || []).includes(item));
+        if (newItems.length > 0) {
+          const updatedSkills = {
+            ...localSkills,
+            languages: [...(localSkills.languages || []), ...newItems]
+          };
+          setLocalSkills(updatedSkills);
+          updateResume({ skills: updatedSkills });
         }
-        setErrors(newErrors);
-        
-        if (isValid) {
-          setStep(prev => Math.min(10, prev + 1));
-          return;
-        } else {
-          toast("Please resolve the validation errors before proceeding.", "error");
-          return;
-        }
+        setLangInput('');
       }
     }
 
