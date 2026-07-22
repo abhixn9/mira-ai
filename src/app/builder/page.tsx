@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -248,6 +248,17 @@ export default function BuilderPage() {
       });
     }
   }, [activeResume?.id]);
+
+  const livePreviewData = useMemo(() => {
+    if (!activeResume) return DEFAULT_RESUME;
+    return {
+      ...activeResume,
+      personalInfo: {
+        ...activeResume.personalInfo,
+        ...localPersonalInfo
+      }
+    };
+  }, [activeResume, localPersonalInfo]);
 
   const [aiGenerating, setAiGenerating] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -668,13 +679,15 @@ export default function BuilderPage() {
   const handleAddResp = (expId: string) => {
     const exp = experience.find(e => e.id === expId);
     if (!exp) return;
-    handleUpdateExperience(expId, 'responsibilities', [...exp.responsibilities, '']);
+    const current = exp.responsibilities || [];
+    handleUpdateExperience(expId, 'responsibilities', [...current, '']);
   };
 
   const handleUpdateResp = (expId: string, idx: number, val: string) => {
     const exp = experience.find(e => e.id === expId);
     if (!exp) return;
-    const newResps = [...exp.responsibilities];
+    const current = exp.responsibilities || [];
+    const newResps = [...current];
     newResps[idx] = val;
     handleUpdateExperience(expId, 'responsibilities', newResps);
   };
@@ -682,28 +695,29 @@ export default function BuilderPage() {
   const handleDeleteResp = (expId: string, idx: number) => {
     const exp = experience.find(e => e.id === expId);
     if (!exp) return;
-    handleUpdateExperience(expId, 'responsibilities', exp.responsibilities.filter((_, i) => i !== idx));
+    const current = exp.responsibilities || [];
+    handleUpdateExperience(expId, 'responsibilities', current.filter((_, i) => i !== idx));
   };
 
   const handleEnhanceExperienceBullets = async (expId: string) => {
     const exp = experience.find(e => e.id === expId);
     if (!exp) return;
-    if (!personalInfo.jobTitle) {
+    const targetTitle = localPersonalInfo.jobTitle || personalInfo.jobTitle;
+    if (!targetTitle) {
       toast("Please specify a target Job Title in Step 1.", "error");
       return;
     }
     toast("AI is transforming responsibilities...", "info");
     try {
-      const enhanced = await improveExperienceApi(personalInfo.jobTitle, exp.responsibilities);
+      const current = exp.responsibilities || [];
+      const enhanced = await improveExperienceApi(targetTitle, current);
       handleUpdateExperience(expId, 'achievements', enhanced);
       toast("Bullet points optimized into achievements.");
     } catch (err) {
       console.warn("[AI Experience Enhancer] Error:", err);
-      toast("AI optimization failed. Using simulator fallback.", "info");
-      const enhanced = simulateBulletPoints({
-        jobTitle: personalInfo.jobTitle,
-        tone: 'professional'
-      });
+      toast("Failed to query OpenAI. Using fallback simulator.", "info");
+      const current = exp.responsibilities || [];
+      const enhanced = simulateExperience(targetTitle, current);
       handleUpdateExperience(expId, 'achievements', enhanced);
     }
   };
@@ -1328,9 +1342,9 @@ LANGUAGES: ${skills.languages.join(', ')}
                           <button onClick={() => handleAddResp(exp.id)} className="text-[9px] font-bold text-neutral-400 hover:text-white uppercase">+ Add Bullet</button>
                         </div>
                         <div className="space-y-2">
-                          {exp.responsibilities.map((resp, rIdx) => (
+                          {(exp.responsibilities || []).map((resp, rIdx) => (
                             <div key={rIdx} className="flex items-center space-x-2">
-                              <Input value={resp} onChange={(e) => handleUpdateResp(exp.id, rIdx, e.target.value)} />
+                              <Input value={resp || ''} onChange={(e) => handleUpdateResp(exp.id, rIdx, e.target.value)} />
                               <button onClick={() => handleDeleteResp(exp.id, rIdx)} className="text-neutral-500 hover:text-red-400"><X className="h-3.5 w-3.5" /></button>
                             </div>
                           ))}
@@ -1345,10 +1359,10 @@ LANGUAGES: ${skills.languages.join(', ')}
                         <span>Enhance Bullet Points with AI</span>
                       </button>
 
-                      {exp.achievements.length > 0 && (
+                      {(exp.achievements || []).length > 0 && (
                         <div className="p-3 bg-neutral-900/50 rounded border border-neutral-800/50 text-xs text-neutral-300 space-y-1">
                           <span className="text-[8px] uppercase tracking-widest text-neutral-500 font-bold block mb-1">Optimized Output</span>
-                          {exp.achievements.map((ach, aIdx) => (
+                          {(exp.achievements || []).map((ach, aIdx) => (
                             <p key={aIdx} className="italic">&bull; {ach}</p>
                           ))}
                         </div>
@@ -1954,7 +1968,7 @@ LANGUAGES: ${skills.languages.join(', ')}
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
 
           <div className="relative z-10 w-full max-w-[820px] shadow-[0_20px_60px_rgba(0,0,0,0.7)] print:shadow-none print:w-full print:max-w-none origin-top transition-transform duration-300">
-              <ResumeTemplate ref={resumeRef} data={activeResume} />
+              <ResumeTemplate ref={resumeRef} data={livePreviewData} />
           </div>
         </div>
 

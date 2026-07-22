@@ -152,6 +152,9 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
                   r.personalInfo.portfolio = '';
                 }
               }
+              if (r.summary && (r.summary.includes('Results-oriented Senior Software Engineer') || r.summary.includes('Vercel & Stripe') || r.summary.includes('architecting web applications'))) {
+                r.summary = '';
+              }
               return r;
             });
             setResumes(sanitized);
