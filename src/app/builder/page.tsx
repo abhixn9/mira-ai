@@ -781,21 +781,26 @@ export default function BuilderPage() {
       cgpa: '',
       location: ''
     };
-    updateResume({ education: [...education, newEdu] });
+    const updated = [...localEducation, newEdu];
+    setLocalEducation(updated);
+    updateResume({ education: updated });
   };
 
   const handleUpdateEducation = (id: string, field: string, value: string) => {
-    const updated = education.map(edu => {
+    const updated = localEducation.map(edu => {
       if (edu.id === id) {
         return { ...edu, [field]: value };
       }
       return edu;
     });
+    setLocalEducation(updated);
     updateResume({ education: updated });
   };
 
   const handleDeleteEducation = (id: string) => {
-    updateResume({ education: education.filter(edu => edu.id !== id) });
+    const updated = localEducation.filter(edu => edu.id !== id);
+    setLocalEducation(updated);
+    updateResume({ education: updated });
     toast("Education item deleted.", "info");
   };
 
@@ -803,28 +808,27 @@ export default function BuilderPage() {
   const handleSkillAdd = (type: 'technical' | 'soft' | 'languages', value: string) => {
     if (!value.trim()) return;
     
-    // Split by commas, trim, filter empty and duplicates
     const newItems = value.split(',')
       .map(item => item.trim())
-      .filter(item => item !== '' && !skills[type].includes(item));
+      .filter(item => item !== '' && !(localSkills[type] || []).includes(item));
       
     if (newItems.length === 0) return;
 
-    updateResume({
-      skills: {
-        ...skills,
-        [type]: [...skills[type], ...newItems]
-      }
-    });
+    const updated = {
+      ...localSkills,
+      [type]: [...(localSkills[type] || []), ...newItems]
+    };
+    setLocalSkills(updated);
+    updateResume({ skills: updated });
   };
 
   const handleSkillDelete = (type: 'technical' | 'soft' | 'languages', idx: number) => {
-    updateResume({
-      skills: {
-        ...skills,
-        [type]: skills[type].filter((_, i) => i !== idx)
-      }
-    });
+    const updated = {
+      ...localSkills,
+      [type]: (localSkills[type] || []).filter((_, i) => i !== idx)
+    };
+    setLocalSkills(updated);
+    updateResume({ skills: updated });
   };
 
   // Projects
@@ -836,17 +840,21 @@ export default function BuilderPage() {
       technologies: [],
       link: ''
     };
-    updateResume({ projects: [...projects, newProj] });
+    const updated = [...localProjects, newProj];
+    setLocalProjects(updated);
+    updateResume({ projects: updated });
   };
 
   const handleUpdateProject = (id: string, field: string, value: string | string[]) => {
-    updateResume({
-      projects: projects.map(p => p.id === id ? { ...p, [field]: value } : p)
-    });
+    const updated = localProjects.map(p => p.id === id ? { ...p, [field]: value } : p);
+    setLocalProjects(updated);
+    updateResume({ projects: updated });
   };
 
   const handleDeleteProject = (id: string) => {
-    updateResume({ projects: projects.filter(p => p.id !== id) });
+    const updated = localProjects.filter(p => p.id !== id);
+    setLocalProjects(updated);
+    updateResume({ projects: updated });
     toast("Project item deleted.", "info");
   };
 
@@ -858,17 +866,21 @@ export default function BuilderPage() {
       issuer: '',
       year: ''
     };
-    updateResume({ certifications: [...certifications, newCert] });
+    const updated = [...localCertifications, newCert];
+    setLocalCertifications(updated);
+    updateResume({ certifications: updated });
   };
 
   const handleUpdateCert = (id: string, field: string, value: string) => {
-    updateResume({
-      certifications: certifications.map(c => c.id === id ? { ...c, [field]: value } : c)
-    });
+    const updated = localCertifications.map(c => c.id === id ? { ...c, [field]: value } : c);
+    setLocalCertifications(updated);
+    updateResume({ certifications: updated });
   };
 
   const handleDeleteCert = (id: string) => {
-    updateResume({ certifications: certifications.filter(c => c.id !== id) });
+    const updated = localCertifications.filter(c => c.id !== id);
+    setLocalCertifications(updated);
+    updateResume({ certifications: updated });
     toast("Certification item deleted.", "info");
   };
 
@@ -968,7 +980,7 @@ LANGUAGES: ${skills.languages.join(', ')}
     const htmlHeader = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
       <head>
-        <title>${personalInfo.name} Resume</title>
+        <title>${localPersonalInfo.name || 'Resume'}</title>
         <!--[if gte mso 9]>
         <xml>
           <w:WordDocument>
@@ -991,41 +1003,64 @@ LANGUAGES: ${skills.languages.join(', ')}
         </style>
       </head>
       <body>
-        <h1>${personalInfo.name || 'Your Name'}</h1>
-        <div class="job-title">${personalInfo.jobTitle || 'Target Position'}</div>
+        <h1>${localPersonalInfo.name || 'Your Name'}</h1>
+        <div class="job-title">${localPersonalInfo.jobTitle || ''}</div>
         <div class="contacts">
-          \${[personalInfo.email, personalInfo.phone, personalInfo.address, personalInfo.linkedin, personalInfo.github].filter(Boolean).join('  |  ')}
+          ${[localPersonalInfo.email, localPersonalInfo.phone, localPersonalInfo.address, localPersonalInfo.linkedin, localPersonalInfo.github].filter(Boolean).join('  |  ')}
         </div>
-        \${summary ? \`<div class="section"><h2>Professional Summary</h2><p>\${summary}</p></div>\` : ''}
-        \${experience.length > 0 ? \`
+        ${localSummary ? `<div class="section"><h2>Professional Summary</h2><p>${localSummary}</p></div>` : ''}
+        ${localExperience.length > 0 ? `
         <div class="section">
           <h2>Work Experience</h2>
-          \${experience.map(exp => \`
+          ${localExperience.map(exp => `
             <div class="entry">
-              <div class="entry-header"><strong>\${exp.role} &mdash; \${exp.company}</strong><span style="float: right; font-weight: normal; font-size: 10pt;">\${exp.duration}</span></div>
-              <div style="font-size: 10pt; color: #666; margin-bottom: 4pt;">\${exp.location || ''}</div>
-              <ul>\${exp.responsibilities.map(r => \`<li>\${r}</li>\`).join('')}\${exp.achievements.map(a => \`<li><strong>\${a}</strong></li>\`).join('')}</ul>
+              <div class="entry-header"><strong>${exp.role || ''} &mdash; ${exp.company || ''}</strong><span style="float: right; font-weight: normal; font-size: 10pt;">${exp.duration || ''}</span></div>
+              <div style="font-size: 10pt; color: #666; margin-bottom: 4pt;">${exp.location || ''}</div>
+              <ul>${(exp.responsibilities || []).map(r => `<li>${r}</li>`).join('')}${(exp.achievements || []).map(a => `<li><strong>${a}</strong></li>`).join('')}</ul>
             </div>
-          \`).join('')}
+          `).join('')}
         </div>
-        \` : ''}
-        \${education.length > 0 ? \`
+        ` : ''}
+        ${localEducation.length > 0 ? `
         <div class="section">
           <h2>Education</h2>
-          \${education.map(edu => \`
+          ${localEducation.map(edu => `
             <div class="entry">
-              <div class="entry-header"><strong>\${edu.degree} &mdash; \${edu.university}</strong><span style="float: right; font-weight: normal; font-size: 10pt;">\${edu.duration}</span></div>
-              \${edu.cgpa ? \`<div style="font-size: 10pt; color: #666;">CGPA: \${edu.cgpa}</div>\` : ''}
+              <div class="entry-header"><strong>${edu.degree || ''} &mdash; ${edu.university || ''}</strong><span style="float: right; font-weight: normal; font-size: 10pt;">${edu.duration || ''}</span></div>
+              ${edu.cgpa ? `<div style="font-size: 10pt; color: #666;">CGPA: ${edu.cgpa}</div>` : ''}
             </div>
-          \`).join('')}
+          `).join('')}
         </div>
-        \` : ''}
+        ` : ''}
+        ${((localSkills.technical && localSkills.technical.length > 0) || (localSkills.soft && localSkills.soft.length > 0) || (localSkills.languages && localSkills.languages.length > 0)) ? `
         <div class="section">
           <h2>Skills</h2>
-          <p><strong>Technical Skills:</strong> \${skills.technical.join(', ')}</p>
-          \${skills.soft.length > 0 ? \`<p><strong>Soft Skills:</strong> \${skills.soft.join(', ')}</p>\` : ''}
-          \${skills.languages.length > 0 ? \`<p><strong>Languages:</strong> \${skills.languages.join(', ')}</p>\` : ''}
+          ${(localSkills.technical || []).length > 0 ? `<p><strong>Technical Skills:</strong> ${localSkills.technical.join(', ')}</p>` : ''}
+          ${(localSkills.soft || []).length > 0 ? `<p><strong>Soft Skills:</strong> ${localSkills.soft.join(', ')}</p>` : ''}
+          ${(localSkills.languages || []).length > 0 ? `<p><strong>Languages:</strong> ${localSkills.languages.join(', ')}</p>` : ''}
         </div>
+        ` : ''}
+        ${localProjects.length > 0 ? `
+        <div class="section">
+          <h2>Projects</h2>
+          ${localProjects.map(proj => `
+            <div class="entry">
+              <div class="entry-header"><strong>${proj.title}</strong></div>
+              <p style="font-size: 10.5pt; color: #333;">${proj.description}</p>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+        ${localCertifications.length > 0 ? `
+        <div class="section">
+          <h2>Certifications</h2>
+          ${localCertifications.map(cert => `
+            <div class="entry">
+              <div class="entry-header"><strong>${cert.name}</strong> &mdash; ${cert.issuer} ${cert.year ? `(${cert.year})` : ''}</div>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
       </body>
       </html>
     `;
@@ -1033,11 +1068,11 @@ LANGUAGES: ${skills.languages.join(', ')}
     const url = URL.createObjectURL(blob);
     const element = document.createElement("a");
     element.href = url;
-    element.download = `\${personalInfo.name.replace(/\\s+/g, '_')}_Resume.doc`;
+    element.download = `${(localPersonalInfo.name || 'My').replace(/\s+/g, '_')}_Resume.doc`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    toast("DOCX file downloaded successfully.");
+    toast("DOCX file downloaded successfully.", "success");
   };
 
   return (
@@ -1438,7 +1473,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                 {errors.education && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.education}</p>}
 
                 <div className="space-y-6">
-                  {education.map((edu) => (
+                  {localEducation.map((edu) => (
                     <GlassCard key={edu.id} className="p-5 border border-neutral-900 space-y-4 relative">
                       <button 
                         onClick={() => handleDeleteEducation(edu.id)}
@@ -1498,7 +1533,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   {errors.skills && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.skills}</p>}
                   
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {skills.technical.map((sk, idx) => (
+                    {(localSkills.technical || []).map((sk, idx) => (
                       <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1.5">
                         <span>{sk}</span>
                         <button onClick={() => handleSkillDelete('technical', idx)} className="text-neutral-500 hover:text-white">&times;</button>
@@ -1530,7 +1565,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                     }}
                   />
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {skills.soft.map((sk, idx) => (
+                    {(localSkills.soft || []).map((sk, idx) => (
                       <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1.5">
                         <span>{sk}</span>
                         <button onClick={() => handleSkillDelete('soft', idx)} className="text-neutral-500 hover:text-white">&times;</button>
@@ -1557,7 +1592,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                 {errors.projects && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.projects}</p>}
 
                 <div className="space-y-6">
-                  {projects.map((proj) => (
+                  {localProjects.map((proj) => (
                     <GlassCard key={proj.id} className="p-4 bg-neutral-950 border border-neutral-900 space-y-3 relative text-left">
                       <button 
                         onClick={() => handleDeleteProject(proj.id)}
@@ -1595,7 +1630,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                 {errors.certifications && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.certifications}</p>}
 
                 <div className="space-y-4">
-                  {certifications.map((cert) => (
+                  {localCertifications.map((cert) => (
                     <div key={cert.id} className="grid grid-cols-3 gap-2 items-center relative pr-8">
                       <Input value={cert.name} onChange={(e) => handleUpdateCert(cert.id, 'name', e.target.value)} placeholder="Name" />
                       <Input value={cert.issuer} onChange={(e) => handleUpdateCert(cert.id, 'issuer', e.target.value)} placeholder="Issuer" />
@@ -1643,7 +1678,7 @@ LANGUAGES: ${skills.languages.join(', ')}
                   {errors.languages && <p className="text-[10px] text-red-400 mt-1 flex items-center"><AlertCircle className="h-3.5 w-3.5 mr-1" />{errors.languages}</p>}
 
                   <div className="flex flex-wrap gap-1.5 mt-2">
-                    {skills.languages.map((sk, idx) => (
+                    {(localSkills.languages || []).map((sk, idx) => (
                       <span key={idx} className="bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1.5">
                         <span>{sk}</span>
                         <button onClick={() => handleSkillDelete('languages', idx)} className="text-neutral-500 hover:text-white">&times;</button>
@@ -1953,24 +1988,6 @@ LANGUAGES: ${skills.languages.join(', ')}
                     <Download className="h-4 w-4 text-purple-400" />
                     <span>Download Document (DOCX)</span>
                   </button>
-                  
-                  {/* Generate Share Link */}
-                  <button 
-                    onClick={() => setShowShareModal(true)}
-                    className="w-full py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    <span>Generate Share Link &amp; QR</span>
-                  </button>
-
-                  {/* Export Plain Text */}
-                  <button 
-                    onClick={handleExportTxt}
-                    className="w-full py-3 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 text-xs font-bold uppercase tracking-wider rounded-lg transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <FileCheck className="h-4 w-4" />
-                    <span>Export Plain Text (TXT)</span>
-                  </button>
                 </div>
               </div>
             )}
@@ -2011,10 +2028,10 @@ LANGUAGES: ${skills.languages.join(', ')}
 
         {/* Right Column: Live Sheet Preview */}
         <div className={cn(
-          "flex-1 bg-neutral-950 overflow-y-auto p-4 sm:p-8 relative justify-center items-start min-w-0 sm:min-w-[360px]",
+          "flex-1 bg-neutral-950 overflow-y-auto p-4 sm:p-8 relative justify-center items-start min-w-0 sm:min-w-[360px] print:flex print:w-full print:bg-white print:p-0 print:static",
           mobileViewTab === 'editor' ? 'hidden lg:flex' : 'flex'
         )}>
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0 print:hidden"></div>
 
           <div className="relative z-10 w-full max-w-[820px] shadow-[0_20px_60px_rgba(0,0,0,0.7)] print:shadow-none print:w-full print:max-w-none origin-top transition-transform duration-300">
               <ResumeTemplate ref={resumeRef} data={livePreviewData} />
@@ -2022,77 +2039,6 @@ LANGUAGES: ${skills.languages.join(', ')}
         </div>
 
       </div>
-
-      {/* Share / Export Modal Overlay */}
-      {showShareModal && (
-        <div className="no-print fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md glass-panel border border-neutral-900 rounded-2xl p-6 relative">
-            <button 
-              onClick={() => setShowShareModal(false)}
-              className="absolute top-4 right-4 text-neutral-500 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <h3 className="font-bold text-sm uppercase tracking-wider mb-2">Share & Export Resume</h3>
-            <p className="text-[11px] text-neutral-500 leading-normal mb-6">
-              Generate share links, access simulated QR codes, or export standard plain text files.
-            </p>
-
-            <div className="space-y-6">
-              <div className="space-y-1.5">
-                <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400">Shareable Web Link</label>
-                <div className="flex gap-2">
-                  <Input 
-                    value={`https://mira-resume.io/share/${activeResume.id}`} 
-                    readOnly 
-                    className="text-xs bg-neutral-900 border-neutral-850 h-9" 
-                  />
-                  <button 
-                    onClick={handleCopyLink}
-                    className="px-4 bg-white text-black hover:bg-neutral-200 text-xs font-bold rounded"
-                  >
-                    Copy
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 items-center">
-                <div className="space-y-1.5">
-                  <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold block">Scannable QR Code</span>
-                  <div className="h-28 w-28 bg-white p-1 rounded-lg flex items-center justify-center border border-neutral-800">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://mira-resume.io/share/${activeResume.id}`)}`} 
-                      alt="Resume Share QR Code"
-                      className="h-full w-full object-contain"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <span className="text-[9px] uppercase tracking-wider text-neutral-400 font-bold block">Document Exports</span>
-                  <button 
-                    onClick={handleExportTxt}
-                    className="w-full py-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-850 text-xs font-semibold rounded text-neutral-300"
-                  >
-                    Export Plain Text (TXT)
-                  </button>
-                  <button 
-                    onClick={() => {
-                      handleDownloadDocx();
-                      setShowShareModal(false);
-                    }}
-                    className="w-full py-2 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 text-xs font-semibold rounded text-neutral-300"
-                  >
-                    Export MS Word (DOCX)
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       {/* Interactive Style & Color Wizard Modal */}
       {showStyleWizardModal && (
         <div className="no-print fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">

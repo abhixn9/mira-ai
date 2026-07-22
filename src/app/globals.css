@@ -257,40 +257,21 @@
 @media print {
   @page {
     size: auto;
-    margin: 0mm;
+    margin: 10mm;
   }
-  body {
+  html, body {
     background: white !important;
     color: black !important;
-    margin: 1.6cm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
   .no-print {
     display: none !important;
   }
   .print-page-break {
     page-break-after: always;
-  }
-  body.credits-finished {
-    background: black !important;
-  }
-  body.credits-finished * {
-    display: none !important;
-  }
-  body.credits-finished::after {
-    content: "EXPORT LOCKED: You need at least 80 credits or a premium subscription to download, print, or take a screenshot of your resume.";
-    display: flex !important;
-    position: fixed !important;
-    inset: 0 !important;
-    background: black !important;
-    color: #a855f7 !important;
-    font-family: system-ui, sans-serif !important;
-    font-size: 18pt !important;
-    font-weight: bold !important;
-    text-align: center !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 3cm !important;
-    box-sizing: border-box !important;
   }
 }
 

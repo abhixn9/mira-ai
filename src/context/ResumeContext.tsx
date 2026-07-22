@@ -130,13 +130,13 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
                 if (r.personalInfo.name === 'Alexander Sterling' || r.personalInfo.name === 'Guest Demo' || r.personalInfo.name === 'Demo User') {
                   r.personalInfo.name = '';
                 }
-                if (r.personalInfo.jobTitle === 'Senior Software Engineer / Tech Lead' || r.personalInfo.jobTitle === 'Senior Full Stack Architect') {
+                if (r.personalInfo.jobTitle === 'Senior Software Engineer / Tech Lead' || r.personalInfo.jobTitle === 'Senior Full Stack Architect' || r.personalInfo.jobTitle === 'Senior Software Engineer') {
                   r.personalInfo.jobTitle = '';
                 }
-                if (r.personalInfo.email === 'alexander@vercel.com' || r.personalInfo.email === 'guest@mira-ai.com' || r.personalInfo.email === 'alexander.sterling@design.io') {
+                if (r.personalInfo.email === 'alexander@vercel.com' || r.personalInfo.email === 'guest@mira-ai.com' || r.personalInfo.email === 'alexander.sterling@design.io' || r.personalInfo.email === 'alexander@example.com') {
                   r.personalInfo.email = '';
                 }
-                if (r.personalInfo.phone === '(555) 019-2834' || r.personalInfo.phone === '+15550192834') {
+                if (r.personalInfo.phone === '(555) 019-2834' || r.personalInfo.phone === '+15550192834' || r.personalInfo.phone === '+1 (555) 019-2834') {
                   r.personalInfo.phone = '';
                 }
                 if (r.personalInfo.address === 'San Francisco, CA' || r.personalInfo.address === 'Manhattan, New York, NY') {
@@ -155,14 +155,28 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
               if (r.summary && (r.summary.includes('Results-oriented Senior Software Engineer') || r.summary.includes('Vercel & Stripe') || r.summary.includes('architecting web applications'))) {
                 r.summary = '';
               }
-              if (Array.isArray(r.experience) && r.experience.some((e: any) => e.company === 'Vercel' || e.company === 'Stripe' || e.company === 'Aether Technologies' || e.title === 'Lead Software Engineer')) {
-                r.experience = [];
+              if (Array.isArray(r.experience)) {
+                r.experience = r.experience.filter((e: any) => e.company !== 'Vercel' && e.company !== 'Stripe' && e.company !== 'Aether Technologies' && e.title !== 'Lead Software Engineer');
               }
-              if (Array.isArray(r.education) && r.education.some((e: any) => e.institution === 'UC Berkeley' || e.university === 'Massachusetts Institute of Technology' || e.university === 'Boston University')) {
-                r.education = [];
+              if (Array.isArray(r.education)) {
+                r.education = r.education.filter((e: any) => e.institution !== 'UC Berkeley' && e.university !== 'Massachusetts Institute of Technology' && e.university !== 'Boston University');
               }
-              if (r.skills && Array.isArray(r.skills.technical) && r.skills.technical.includes('React') && r.skills.technical.includes('Next.js') && r.skills.technical.length === 6) {
-                r.skills = { technical: [], soft: [], languages: [] };
+              if (r.skills) {
+                if (Array.isArray(r.skills.technical)) {
+                  r.skills.technical = r.skills.technical.filter((s: string) => !['React', 'Next.js', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS', 'Docker', 'GraphQL', 'AWS', 'System Design'].includes(s));
+                }
+                if (Array.isArray(r.skills.soft)) {
+                  r.skills.soft = r.skills.soft.filter((s: string) => !['Technical Leadership', 'Cross-functional Collaboration', 'System Architecture', 'Code Review'].includes(s));
+                }
+                if (Array.isArray(r.skills.languages)) {
+                  r.skills.languages = r.skills.languages.filter((s: string) => !['English (Native)', 'Spanish (Professional)', 'Spanish (Fluent)'].includes(s));
+                }
+              }
+              if (Array.isArray(r.projects)) {
+                r.projects = r.projects.filter((p: any) => p.title !== 'Aether Engine' && p.title !== 'MIRA AI CORE EDITOR' && p.title !== 'AETHER STATE LIBRARY');
+              }
+              if (Array.isArray(r.certifications)) {
+                r.certifications = r.certifications.filter((c: any) => c.name !== 'AWS Certif' && !c.name?.includes('AWS Certified'));
               }
               return r;
             });
