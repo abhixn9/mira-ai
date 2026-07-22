@@ -233,6 +233,9 @@ export default function BuilderPage() {
     portfolio: activeResume?.personalInfo?.portfolio || ''
   });
 
+  // Local Summary buffer state for 100% fluid mobile typing
+  const [localSummary, setLocalSummary] = useState(activeResume?.summary || '');
+
   useEffect(() => {
     if (activeResume?.personalInfo) {
       setLocalPersonalInfo({
@@ -247,6 +250,9 @@ export default function BuilderPage() {
         portfolio: activeResume.personalInfo.portfolio || ''
       });
     }
+    if (activeResume) {
+      setLocalSummary(activeResume.summary || '');
+    }
   }, [activeResume?.id]);
 
   const livePreviewData = useMemo(() => {
@@ -256,9 +262,10 @@ export default function BuilderPage() {
       personalInfo: {
         ...activeResume.personalInfo,
         ...localPersonalInfo
-      }
+      },
+      summary: localSummary
     };
-  }, [activeResume, localPersonalInfo]);
+  }, [activeResume, localPersonalInfo, localSummary]);
 
   const [aiGenerating, setAiGenerating] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -528,6 +535,7 @@ export default function BuilderPage() {
       photo: ''
     };
     setLocalPersonalInfo(emptyInfo);
+    setLocalSummary('');
     setErrors({});
     updateResume({
       personalInfo: emptyInfo,
@@ -615,33 +623,38 @@ export default function BuilderPage() {
   };
 
   const handleSummaryChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setLocalSummary(val);
     setErrors(prev => {
       if (!prev.summary) return prev;
       const copy = { ...prev };
       delete copy.summary;
       return copy;
     });
-    updateResume({ summary: e.target.value });
+    updateResume({ summary: val });
   };
 
   const handleGenerateSummary = async (tone: 'professional' | 'executive' | 'creative') => {
-    if (!personalInfo.jobTitle) {
+    const targetJobTitle = (localPersonalInfo.jobTitle || personalInfo.jobTitle || '').trim();
+    if (!targetJobTitle) {
       toast("Please add a Job Title target in Step 1.", "error");
       return;
     }
     setAiGenerating(true);
     try {
-      const generated = await generateSummaryApi(personalInfo.jobTitle, tone);
-      updateResume({ summary: generated });
+      const generated = await generateSummaryApi(targetJobTitle, tone);
+      setLocalSummary(generated);
+      updateResume({ summary: generated, personalInfo: localPersonalInfo });
       toast(`AI Summary generated successfully in ${tone} tone.`);
     } catch (err) {
       console.warn("[AI Summary Generator] Error:", err);
-      toast("Failed to query OpenAI. Using fallback simulator.", "info");
+      toast("Using AI simulator to generate summary...", "info");
       const generated = simulateSummary({
-        jobTitle: personalInfo.jobTitle,
+        jobTitle: targetJobTitle,
         tone
       });
-      updateResume({ summary: generated });
+      setLocalSummary(generated);
+      updateResume({ summary: generated, personalInfo: localPersonalInfo });
     } finally {
       setAiGenerating(false);
     }
@@ -1266,10 +1279,10 @@ LANGUAGES: ${skills.languages.join(', ')}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
                     <label className="text-[9px] uppercase font-bold tracking-wider text-neutral-400">Professional Summary</label>
-                    <span className="text-[8px] bg-neutral-900 border border-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded font-bold">LEN: {summary.length}</span>
+                    <span className="text-[8px] bg-neutral-900 border border-neutral-800 text-neutral-500 px-1.5 py-0.5 rounded font-bold">LEN: {localSummary.length}</span>
                   </div>
                   <Textarea 
-                    value={summary} 
+                    value={localSummary} 
                     onChange={handleSummaryChange} 
                     placeholder="Briefly state your core expertise and target role parameters..."
                     className="min-h-[160px]"
