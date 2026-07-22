@@ -284,9 +284,11 @@ export default function LandingPage() {
       <HistoryDrawer open={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
 
       {/* Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-neutral-900 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <MiraLogo href="/" size="md" />
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-neutral-900 px-4 sm:px-6 py-3.5">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="shrink-0 flex items-center">
+            <MiraLogo href="/" size="md" />
+          </div>
 
           <div className="hidden md:flex items-center space-x-12 lg:space-x-16 text-sm font-medium text-neutral-400">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>

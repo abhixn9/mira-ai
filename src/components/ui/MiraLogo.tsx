@@ -54,7 +54,7 @@ export function MiraLogo({ href = '/', size = 'md', showText = true, className =
         <motion.span
           variants={{ hover: { letterSpacing: '0.12em' } }}
           transition={{ duration: 0.25 }}
-          className={`font-extrabold ${s.text} tracking-wider text-white leading-none`}
+          className={`font-extrabold ${s.text} tracking-wider text-white leading-none whitespace-nowrap shrink-0 flex items-center gap-1.5`}
         >
           MIRA{' '}
           <span className="text-purple-400 font-normal">AI</span>
