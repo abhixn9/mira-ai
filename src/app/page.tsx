@@ -440,127 +440,132 @@ export default function LandingPage() {
             </div>
           </div>
 
+          {/* Right Header Actions */}
           <div className="flex items-center space-x-3">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.93 }}
-              onClick={() => setIsHistoryOpen(true)}
-              className="h-9 w-9 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-600 flex items-center justify-center text-neutral-400 hover:text-white transition-all"
-              title="View History"
-            >
-              <History className="h-4 w-4" />
-            </motion.button>
+            {/* Desktop Navigation Controls (Hidden on Mobile) */}
+            <div className="hidden md:flex items-center space-x-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.93 }}
+                onClick={() => setIsHistoryOpen(true)}
+                className="h-9 w-9 rounded-lg bg-neutral-900 border border-neutral-800 hover:border-neutral-600 flex items-center justify-center text-neutral-400 hover:text-white transition-all cursor-pointer"
+                title="View History"
+              >
+                <History className="h-4 w-4" />
+              </motion.button>
 
-            {userProfile ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                  className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 hover:border-neutral-700 px-3 py-1.5 rounded-full transition-all cursor-pointer"
-                >
-                  <div className="h-6 w-6 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/60 flex items-center justify-center text-xs font-black uppercase">
-                    {userProfile.name ? userProfile.name.charAt(0) : 'U'}
-                  </div>
-                  <span className="text-xs font-bold text-white max-w-[120px] truncate">{userProfile.name}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
-                </button>
+              {userProfile ? (
+                <div className="relative">
+                  <button
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    className="flex items-center space-x-2 bg-neutral-900 hover:bg-neutral-850 border border-neutral-800 hover:border-neutral-700 px-3 py-1.5 rounded-full transition-all cursor-pointer"
+                  >
+                    <div className="h-6 w-6 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/60 flex items-center justify-center text-xs font-black uppercase">
+                      {userProfile.name ? userProfile.name.charAt(0) : 'U'}
+                    </div>
+                    <span className="text-xs font-bold text-white max-w-[120px] truncate">{userProfile.name}</span>
+                    <ChevronDown className="h-3.5 w-3.5 text-neutral-400" />
+                  </button>
 
-                <AnimatePresence>
-                  {isProfileMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      className="absolute right-0 mt-2 w-56 bg-neutral-950 border border-neutral-850 rounded-2xl p-3 shadow-2xl z-50 text-left"
-                    >
-                      <div className="p-2.5 border-b border-neutral-900 mb-2">
-                        <p className="text-xs font-bold text-white truncate">{userProfile.name}</p>
-                        {userProfile.email && <p className="text-[10px] text-neutral-400 truncate mt-0.5">{userProfile.email}</p>}
-                        <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold uppercase rounded-md">
-                          Verified Member
-                        </span>
-                      </div>
-
-                      <div className="space-y-1">
-                        <Link
-                          href="/dashboard"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
-                        >
-                          <User className="h-3.5 w-3.5 text-purple-400" />
-                          <span>Dashboard & Portfolio</span>
-                        </Link>
-
-                        <Link
-                          href="/builder?type=resume"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
-                        >
-                          <FileText className="h-3.5 w-3.5 text-purple-400" />
-                          <span>My Resume Editor</span>
-                        </Link>
-
-                        <Link
-                          href="/builder?type=cv"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
-                        >
-                          <GraduationCap className="h-3.5 w-3.5 text-purple-400" />
-                          <span>My CV Editor</span>
-                        </Link>
-
-                        <Link
-                          href="/cover-letter"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
-                        >
-                          <Mail className="h-3.5 w-3.5 text-purple-400" />
-                          <span>Cover Letter Writer</span>
-                        </Link>
-
-                        <Link
-                          href="/chatbot"
-                          onClick={() => setIsProfileMenuOpen(false)}
-                          className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
-                        >
-                          <Bot className="h-3.5 w-3.5 text-purple-400" />
-                          <span>AI Assistant Chatbot</span>
-                        </Link>
-
-                        <div className="pt-1 border-t border-neutral-900">
-                          <button
-                            onClick={handleLogout}
-                            className="w-full flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-xl transition-all text-left cursor-pointer"
-                          >
-                            <LogOut className="h-3.5 w-3.5 text-red-400" />
-                            <span>Sign Out</span>
-                          </button>
+                  <AnimatePresence>
+                    {isProfileMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                        className="absolute right-0 mt-2 w-56 bg-neutral-950 border border-neutral-850 rounded-2xl p-3 shadow-2xl z-50 text-left"
+                      >
+                        <div className="p-2.5 border-b border-neutral-900 mb-2">
+                          <p className="text-xs font-bold text-white truncate">{userProfile.name}</p>
+                          {userProfile.email && <p className="text-[10px] text-neutral-400 truncate mt-0.5">{userProfile.email}</p>}
+                          <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] font-bold uppercase rounded-md">
+                            Verified Member
+                          </span>
                         </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <Link href="/auth/login" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors">
-                Sign In
-              </Link>
-            )}
-            <motion.button 
-              whileHover={{ scale: 1.04, boxShadow: '0 0 25px rgba(255,255,255,0.2)' }}
-              whileTap={{ scale: 0.94 }}
-              onClick={() => setIsBuildModalOpen(true)} 
-              className="px-4 py-2 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-md transition-colors duration-200 cursor-pointer"
-            >
-              Build
-            </motion.button>
 
-            {/* Mobile Menu Hamburger Toggle */}
+                        <div className="space-y-1">
+                          <Link
+                            href="/dashboard"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                            className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
+                          >
+                            <User className="h-3.5 w-3.5 text-purple-400" />
+                            <span>Dashboard & Portfolio</span>
+                          </Link>
+
+                          <Link
+                            href="/builder?type=resume"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                            className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
+                          >
+                            <FileText className="h-3.5 w-3.5 text-purple-400" />
+                            <span>My Resume Editor</span>
+                          </Link>
+
+                          <Link
+                            href="/builder?type=cv"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                            className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
+                          >
+                            <GraduationCap className="h-3.5 w-3.5 text-purple-400" />
+                            <span>My CV Editor</span>
+                          </Link>
+
+                          <Link
+                            href="/cover-letter"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                            className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
+                          >
+                            <Mail className="h-3.5 w-3.5 text-purple-400" />
+                            <span>Cover Letter Writer</span>
+                          </Link>
+
+                          <Link
+                            href="/chatbot"
+                            onClick={() => setIsProfileMenuOpen(false)}
+                            className="flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-neutral-300 hover:text-white hover:bg-neutral-900 rounded-xl transition-all"
+                          >
+                            <Bot className="h-3.5 w-3.5 text-purple-400" />
+                            <span>AI Assistant Chatbot</span>
+                          </Link>
+
+                          <div className="pt-1 border-t border-neutral-900">
+                            <button
+                              onClick={handleLogout}
+                              className="w-full flex items-center space-x-2 px-2.5 py-2 text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded-xl transition-all text-left cursor-pointer"
+                            >
+                              <LogOut className="h-3.5 w-3.5 text-red-400" />
+                              <span>Sign Out</span>
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <Link href="/auth/login" className="text-sm font-medium text-neutral-400 hover:text-white transition-colors">
+                  Sign In
+                </Link>
+              )}
+
+              <motion.button 
+                whileHover={{ scale: 1.04, boxShadow: '0 0 25px rgba(255,255,255,0.2)' }}
+                whileTap={{ scale: 0.94 }}
+                onClick={() => setIsBuildModalOpen(true)} 
+                className="px-4 py-2 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-md transition-colors duration-200 cursor-pointer"
+              >
+                Build
+              </motion.button>
+            </div>
+
+            {/* Mobile 3-Line Hamburger Bar Button (Visible ONLY on Mobile) */}
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-neutral-400 hover:text-white rounded-lg bg-neutral-900 border border-neutral-800 transition-colors"
+              className="md:hidden p-2.5 text-neutral-300 hover:text-white rounded-xl bg-neutral-900 border border-neutral-800 hover:border-purple-600 transition-colors flex items-center justify-center cursor-pointer shadow-lg"
               aria-label="Toggle mobile menu"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
+              {isMobileMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-purple-400" />}
             </button>
           </div>
         </div>
@@ -572,56 +577,96 @@ export default function LandingPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-neutral-950/98 border-t border-neutral-900 px-6 py-5 space-y-4 text-left overflow-hidden z-50 mt-4"
+              className="md:hidden bg-neutral-950/98 border-t border-neutral-900 px-6 py-6 space-y-5 text-left overflow-hidden z-50 mt-4 shadow-2xl backdrop-blur-2xl"
             >
-              <div className="space-y-3">
-                <Link 
-                  href="/" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block font-bold text-sm text-white hover:text-purple-300"
-                >
-                  Home
-                </Link>
-                <Link 
-                  href="/dashboard?tab=recruiter" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center space-x-2 font-bold text-sm text-purple-300"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span>Features &amp; AI Diagnostics</span>
-                </Link>
-                <Link 
-                  href="/builder" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block font-bold text-sm text-white hover:text-purple-300"
-                >
-                  AI Resume Builder
-                </Link>
-                <Link 
-                  href="/ats-checker" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block font-bold text-sm text-neutral-300 hover:text-white"
-                >
-                  ATS Resume Checker
-                </Link>
-                <Link 
-                  href="/cover-letter" 
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block font-bold text-sm text-neutral-300 hover:text-white"
-                >
-                  AI Cover Letter Generator
-                </Link>
-              </div>
+              {/* Mobile User Profile Section */}
+              {userProfile && (
+                <div className="flex items-center justify-between p-3.5 bg-neutral-900/80 border border-neutral-800 rounded-2xl">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-9 w-9 rounded-full bg-purple-950 text-purple-300 border border-purple-800 flex items-center justify-center font-black uppercase text-xs">
+                      {userProfile.name ? userProfile.name.charAt(0) : 'U'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-extrabold text-white truncate">{userProfile.name}</p>
+                      {userProfile.email && <p className="text-[10px] text-neutral-400 truncate">{userProfile.email}</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="p-2 text-red-400 hover:bg-red-950/30 rounded-xl cursor-pointer shrink-0"
+                    title="Sign Out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
 
-              <div className="pt-3 border-t border-neutral-900 flex flex-col space-y-2">
+              {/* Main Quick Action Buttons */}
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     setIsBuildModalOpen(true);
                   }}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_4px_15px_rgba(168,85,247,0.4)]"
+                  className="py-3 bg-white text-black font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center space-x-1.5 shadow-md cursor-pointer"
                 >
-                  Build Resume Now
+                  <Zap className="h-4 w-4 fill-black" />
+                  <span>Build Resume</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsUploadModalOpen(true);
+                  }}
+                  className="py-3 bg-neutral-900 hover:bg-neutral-800 text-white border border-neutral-800 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <Upload className="h-4 w-4 text-purple-400" />
+                  <span>Upload PDF</span>
+                </button>
+              </div>
+
+              {/* Navigation Items List */}
+              <div className="space-y-1 pt-2 border-t border-neutral-900">
+                <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500 block px-2 mb-1">Navigation Menu</span>
+                {[
+                  { title: "Home Workspace", path: "/", icon: Sparkles, color: "text-purple-400" },
+                  { title: "AI Resume Builder", path: "/builder?type=resume", icon: Zap, color: "text-purple-400" },
+                  { title: "Academic CV Maker", path: "/builder?type=cv", icon: GraduationCap, color: "text-indigo-400" },
+                  { title: "ATS Resume Checker & Score", path: "/ats-checker", icon: ShieldCheck, color: "text-emerald-400" },
+                  { title: "AI Cover Letter Architect", path: "/cover-letter", icon: Mail, color: "text-blue-400" },
+                  { title: "AI Career Assistant Chat", path: "/chatbot", icon: Bot, color: "text-pink-400" },
+                  { title: "Features & Diagnostics", path: "/dashboard?tab=recruiter", icon: Layers, color: "text-cyan-400" }
+                ].map((item, idx) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={idx}
+                      href={item.path}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-3 p-3 bg-neutral-900/30 hover:bg-neutral-900 border border-neutral-900 hover:border-neutral-800 rounded-xl transition-all"
+                    >
+                      <div className={`h-8 w-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center ${item.color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span className="text-xs font-bold text-white">{item.title}</span>
+                    </Link>
+                  );
+                })}
+
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsHistoryOpen(true);
+                  }}
+                  className="w-full flex items-center space-x-3 p-3 bg-neutral-900/30 hover:bg-neutral-900 border border-neutral-900 hover:border-neutral-800 rounded-xl transition-all text-left cursor-pointer"
+                >
+                  <div className="h-8 w-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-amber-400">
+                    <History className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold text-white">Document History &amp; Saved Drafts</span>
                 </button>
               </div>
             </motion.div>
