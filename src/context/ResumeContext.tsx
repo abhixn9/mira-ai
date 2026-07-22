@@ -37,7 +37,7 @@ interface ResumeContextType {
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
-const DEFAULT_RESUME: ResumeData = {
+export const DEFAULT_RESUME: ResumeData = {
   id: 'my-resume-id',
   title: 'My Resume',
   updatedAt: new Date().toISOString(),
@@ -488,7 +488,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       builderStep,
       setBuilderStep
     }}>
-      {isLoaded && children}
+      {children}
     </ResumeContext.Provider>
   );
 }

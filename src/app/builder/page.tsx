@@ -21,7 +21,7 @@ import {
   User,
   Check
 } from 'lucide-react';
-import { useResume } from '@/context/ResumeContext';
+import { useResume, DEFAULT_RESUME } from '@/context/ResumeContext';
 import { useToast } from '@/context/ToastContext';
 import { ResumeStyle } from '@/types/resume';
 import { ResumeTemplate } from '@/components/templates/Templates';

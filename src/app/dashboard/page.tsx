@@ -289,7 +289,7 @@ function getDashboardThemeStyles(theme: 'purple' | 'blue' | 'emerald') {
   };
 }
 
-export default function RedesignedDashboardPage() {
+function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const paramTab = searchParams ? searchParams.get('tab') : null;
@@ -3743,5 +3743,18 @@ Qualifications:
       </div>
 
     </div>
+  );
+}
+
+export default function RedesignedDashboardPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center text-white space-y-4">
+        <div className="h-8 w-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest">Loading Executive Workspace...</p>
+      </div>
+    }>
+      <DashboardContent />
+    </React.Suspense>
   );
 }

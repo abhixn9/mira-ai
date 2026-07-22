@@ -30,7 +30,7 @@ const getStepDescription = (stepNum: number): string => {
 };
  
 export function FloatingChat() {
-  const { themeColor, activeResume, builderStep } = useResume();
+  const { themeColor, activeResume, builderStep, updateResume, setThemeColor, setBuilderStep } = useResume();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
