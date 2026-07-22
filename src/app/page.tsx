@@ -285,11 +285,25 @@ export default function LandingPage() {
 
       {/* Navigation Bar */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-neutral-900 px-4 sm:px-6 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="shrink-0 flex items-center">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          
+          {/* Mobile 3-Line Hamburger Bar Button (Left on Mobile, Hidden on Desktop) */}
+          <div className="md:hidden flex items-center shrink-0">
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2.5 text-neutral-300 hover:text-white rounded-xl bg-neutral-900 border border-neutral-800 hover:border-purple-600 transition-colors flex items-center justify-center cursor-pointer shadow-lg shrink-0"
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-purple-400" />}
+            </button>
+          </div>
+
+          {/* MIRA AI Logo (Centered on Mobile, Left-aligned on Desktop) */}
+          <div className="flex-1 md:flex-initial flex justify-center md:justify-start shrink-0">
             <MiraLogo href="/" size="md" />
           </div>
 
+          {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center space-x-12 lg:space-x-16 text-sm font-medium text-neutral-400">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             
@@ -408,7 +422,7 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-10 right-0 w-[280px] bg-neutral-950/95 backdrop-blur-2xl border border-neutral-850 rounded-2xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 text-left space-y-1"
+                    className="absolute top-10 right-0 w-[280px] bg-neutral-950/98 backdrop-blur-2xl border border-neutral-850 rounded-2xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.9)] z-50 text-left space-y-1"
                   >
                     <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500 px-3 py-1 block">More Resources</span>
                     {[
@@ -443,7 +457,7 @@ export default function LandingPage() {
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             {/* Desktop Navigation Controls (Hidden on Mobile) */}
             <div className="hidden md:flex items-center space-x-3">
               <motion.button
@@ -561,14 +575,8 @@ export default function LandingPage() {
               </motion.button>
             </div>
 
-            {/* Mobile 3-Line Hamburger Bar Button (Visible ONLY on Mobile) */}
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2.5 text-neutral-300 hover:text-white rounded-xl bg-neutral-900 border border-neutral-800 hover:border-purple-600 transition-colors flex items-center justify-center cursor-pointer shadow-lg"
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-purple-400" />}
-            </button>
+            {/* Mobile Spacer on Right to balance Left Hamburger Button and keep MIRA AI centered */}
+            <div className="md:hidden w-10 h-10 shrink-0" />
           </div>
         </div>
 
@@ -581,6 +589,26 @@ export default function LandingPage() {
               exit={{ opacity: 0, height: 0 }}
               className="md:hidden bg-neutral-950/98 border-t border-neutral-900 px-6 py-6 space-y-5 text-left overflow-hidden z-50 mt-4 shadow-2xl backdrop-blur-2xl"
             >
+              {/* History & Drafts Quick Button (Highlighted at Top) */}
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsHistoryOpen(true);
+                }}
+                className="w-full flex items-center justify-between p-3.5 bg-amber-500/10 border border-amber-500/30 hover:border-amber-400 rounded-2xl transition-all text-left cursor-pointer group shadow-lg"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="h-9 w-9 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+                    <History className="h-4.5 w-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-amber-300">Document History</h4>
+                    <p className="text-[10px] text-neutral-400 font-medium">Access your saved resume drafts &amp; history</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-amber-400 group-hover:translate-x-1 transition-transform" />
+              </button>
+
               {/* Mobile User Profile Section */}
               {userProfile && (
                 <div className="flex items-center justify-between p-3.5 bg-neutral-900/80 border border-neutral-800 rounded-2xl">
@@ -657,19 +685,6 @@ export default function LandingPage() {
                     </Link>
                   );
                 })}
-
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    setIsHistoryOpen(true);
-                  }}
-                  className="w-full flex items-center space-x-3 p-3 bg-neutral-900/30 hover:bg-neutral-900 border border-neutral-900 hover:border-neutral-800 rounded-xl transition-all text-left cursor-pointer"
-                >
-                  <div className="h-8 w-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center justify-center text-amber-400">
-                    <History className="h-4 w-4" />
-                  </div>
-                  <span className="text-xs font-bold text-white">Document History &amp; Saved Drafts</span>
-                </button>
               </div>
             </motion.div>
           )}
