@@ -203,8 +203,18 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         setSubscription(storedSubscription as 'free' | 'pro');
       }
 
-      if (storedName) setUserNameState(storedName);
-      if (storedEmail) setUserEmailState(storedEmail);
+      if (storedName) {
+        setUserNameState(storedName);
+      } else {
+        setUserNameState('Guest User');
+        localStorage.setItem('mira-user-name', 'Guest User');
+      }
+      if (storedEmail) {
+        setUserEmailState(storedEmail);
+      } else {
+        setUserEmailState('guest@mira-ai.com');
+        localStorage.setItem('mira-user-email', 'guest@mira-ai.com');
+      }
       if (storedTheme) setThemeColor(storedTheme as 'purple' | 'blue' | 'emerald');
     } catch (e) {
       console.error("Failed to load state from localStorage:", e);
@@ -212,6 +222,8 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       setActiveResumeId(DEFAULT_RESUME.id);
       setCoverLetters([DEFAULT_COVER_LETTER]);
       setActiveCoverLetterId(DEFAULT_COVER_LETTER.id);
+      setUserNameState('Guest User');
+      setUserEmailState('guest@mira-ai.com');
     }
     setIsLoaded(true);
   }, []);
@@ -304,8 +316,8 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const activeResume = resumes.find(r => r.id === activeResumeId) || null;
-  const activeCoverLetter = coverLetters.find(cl => cl.id === activeCoverLetterId) || null;
+  const activeResume = resumes.find(r => r.id === activeResumeId) || (resumes.length > 0 ? resumes[0] : DEFAULT_RESUME);
+  const activeCoverLetter = coverLetters.find(cl => cl.id === activeCoverLetterId) || (coverLetters.length > 0 ? coverLetters[0] : DEFAULT_COVER_LETTER);
 
   // Actions
   const createResume = (title = 'Untitled Resume') => {

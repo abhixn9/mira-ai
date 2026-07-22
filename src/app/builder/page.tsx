@@ -310,13 +310,8 @@ export default function BuilderPage() {
   };
 
 
-  // If no active resume, render loading state
   if (!activeResume) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
-      </div>
-    );
+    return null;
   }
 
   const { personalInfo, summary, experience, education, skills, certifications, projects, style } = activeResume;

@@ -5,6 +5,7 @@ import { MessageSquare, X, Send, Sparkles, Loader2, Paperclip } from 'lucide-rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResume } from '@/context/ResumeContext';
 import { simulateChatResponse } from '@/utils/aiSimulator';
+import { parseAndExecuteResumeChange } from '@/utils/aiChangeExecutor';
 import { usePathname } from 'next/navigation';
  
 interface Message {

@@ -341,9 +341,10 @@ export function useLogoTransition() {
   const overlay = transitioning ? (
     <LogoTransition
       onFinish={() => {
-        // Do NOT set transitioning to false! We let it stay visible
-        // on the current page to prevent flashes while route loads.
         callback?.();
+        setTimeout(() => {
+          setTransitioning(false);
+        }, 150);
       }}
     />
   ) : null;
