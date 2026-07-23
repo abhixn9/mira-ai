@@ -11,6 +11,8 @@ import { FloatingChat } from "@/components/chat/FloatingChat";
 import { AuthProvider } from "@/components/auth-provider";
 import { LogoAnimation } from '@/components/ui/LogoAnimation';
 
+import Script from "next/script";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -36,6 +38,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
