@@ -24,17 +24,75 @@ export default function RegisterPage() {
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
   const [customGoogleEmail, setCustomGoogleEmail] = useState('');
   const [customGoogleName, setCustomGoogleName] = useState('');
+  const [savedAccounts, setSavedAccounts] = useState<Array<{ name: string; email: string; initial: string }>>([]);
   const [showCustomInput, setShowCustomInput] = useState(false);
 
-  const handleGoogleLogin = (name: string, email: string) => {
+  const openGoogleModal = () => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('mira_registered_users');
+      const activeEmail = localStorage.getItem('mira-user-email');
+      const activeName = localStorage.getItem('mira-user-name');
+      const accList: Array<{ name: string; email: string; initial: string }> = [];
+
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((u: any) => {
+              if (u.email && typeof u.email === 'string') {
+                const userName = u.name || u.email.split('@')[0];
+                accList.push({
+                  name: userName,
+                  email: u.email,
+                  initial: userName.charAt(0).toUpperCase()
+                });
+              }
+            });
+          }
+        } catch (e) {}
+      }
+
+      if (activeEmail && !accList.some(a => a.email.toLowerCase() === activeEmail.toLowerCase())) {
+        const userName = activeName || activeEmail.split('@')[0];
+        accList.push({
+          name: userName,
+          email: activeEmail,
+          initial: userName.charAt(0).toUpperCase()
+        });
+      }
+
+      setSavedAccounts(accList);
+      setShowCustomInput(accList.length === 0);
+    } else {
+      setShowCustomInput(true);
+    }
+    setIsGoogleModalOpen(true);
+  };
+
+  const handleGoogleLogin = (inputName: string, inputEmail: string) => {
+    const finalEmail = (inputEmail || '').trim();
+    if (!finalEmail) {
+      setError('Please enter a valid Google email address.');
+      return;
+    }
+    const derivedName = (inputName || '').trim() || finalEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
     setIsGoogleModalOpen(false);
     setIsLoading(true);
     setTimeout(() => {
       if (typeof window !== 'undefined') {
-        localStorage.setItem('mira-user-name', name);
-        localStorage.setItem('mira-user-email', email);
-        setUserName(name);
-        setUserEmail(email);
+        localStorage.setItem('mira-user-name', derivedName);
+        localStorage.setItem('mira-user-email', finalEmail);
+        setUserName(derivedName);
+        setUserEmail(finalEmail);
+
+        const storedUsers = localStorage.getItem('mira_registered_users');
+        let users: Array<{ name: string; email: string; phone?: string; password?: string }> = storedUsers ? JSON.parse(storedUsers) : [];
+        if (!users.some(u => u.email.toLowerCase() === finalEmail.toLowerCase())) {
+          users.push({ name: derivedName, email: finalEmail });
+          localStorage.setItem('mira_registered_users', JSON.stringify(users));
+        }
+
         const demoResume = {
           id: 'demo-resume-id',
           title: 'My Resume',
@@ -72,6 +130,7 @@ export default function RegisterPage() {
         };
         localStorage.setItem('luxury-resumes', JSON.stringify([demoResume]));
         localStorage.setItem('luxury-active-resume-id', 'demo-resume-id');
+        sessionStorage.setItem('mira_just_logged_in', 'true');
       }
       startTransition(() => {
         router.push('/');
@@ -251,7 +310,7 @@ export default function RegisterPage() {
         <div className="grid grid-cols-2 gap-4">
           <button 
             type="button"
-            onClick={() => setIsGoogleModalOpen(true)}
+            onClick={openGoogleModal}
             className="py-2.5 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 hover:border-neutral-800 rounded-lg text-xs font-bold tracking-wide transition-colors"
           >
             Google
@@ -311,77 +370,93 @@ export default function RegisterPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Choose an account</h3>
+                  <h3 className="text-base font-bold text-white">
+                    {savedAccounts.length > 0 && !showCustomInput ? "Choose an account" : "Sign in with Google"}
+                  </h3>
                   <p className="text-xs text-neutral-400 mt-1">to continue to MIRA AI</p>
                 </div>
               </div>
 
-              {/* Accounts list */}
-              <div className="space-y-2">
-                {[
-                  {
-                    name: 'Vikash Karamala',
-                    email: 'vikash.karamala@mira-ai.com',
-                    initial: 'V'
-                  },
-                  {
-                    name: 'Alexander Sterling',
-                    email: 'alex.sterling@gmail.com',
-                    initial: 'A'
-                  }
-                ].map((account, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleGoogleLogin(account.name, account.email)}
-                    className="w-full p-3 bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-900 hover:border-neutral-850 rounded-xl flex items-center gap-3 transition-all cursor-pointer text-left"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-purple-950/40 text-purple-400 flex items-center justify-center border border-purple-900/40 text-xs font-black">
-                      {account.initial}
+              {/* Content */}
+              <div className="space-y-3">
+                {savedAccounts.length > 0 && !showCustomInput && (
+                  <>
+                    <div className="space-y-2">
+                      {savedAccounts.map((account, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleGoogleLogin(account.name, account.email)}
+                          className="w-full p-3 bg-neutral-900/40 hover:bg-neutral-900 border border-neutral-900 hover:border-neutral-850 rounded-xl flex items-center gap-3 transition-all cursor-pointer text-left"
+                        >
+                          <div className="h-8 w-8 rounded-full bg-purple-950/40 text-purple-400 flex items-center justify-center border border-purple-900/40 text-xs font-black">
+                            {account.initial}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate">{account.name}</p>
+                            <p className="text-[10px] text-neutral-500 truncate">{account.email}</p>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-white truncate">{account.name}</p>
-                      <p className="text-[10px] text-neutral-500 truncate">{account.email}</p>
-                    </div>
-                  </button>
-                ))}
-
-                {showCustomInput ? (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-3 bg-neutral-900/20 border border-neutral-900 rounded-xl space-y-3"
-                  >
-                    <input
-                      type="text"
-                      placeholder="Your Full Name"
-                      value={customGoogleName}
-                      onChange={(e) => setCustomGoogleName(e.target.value)}
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none text-white font-medium"
-                    />
-                    <input
-                      type="email"
-                      placeholder="email@gmail.com"
-                      value={customGoogleEmail}
-                      onChange={(e) => setCustomGoogleEmail(e.target.value)}
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-xs focus:outline-none text-white font-medium"
-                    />
                     <button
                       type="button"
-                      onClick={() => handleGoogleLogin(customGoogleName || 'Google User', customGoogleEmail || 'user@gmail.com')}
-                      className="w-full py-2 bg-white hover:bg-neutral-200 text-black text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer"
+                      onClick={() => setShowCustomInput(true)}
+                      className="w-full p-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 rounded-xl flex items-center justify-center text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
                     >
-                      Sign In
+                      Use another Google account
                     </button>
-                  </motion.div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomInput(true)}
-                    className="w-full p-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-900 rounded-xl flex items-center justify-center text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                  </>
+                )}
+
+                {(savedAccounts.length === 0 || showCustomInput) && (
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleGoogleLogin(customGoogleName, customGoogleEmail);
+                    }} 
+                    className="space-y-3"
                   >
-                    Use another account
-                  </button>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Google Email Address</label>
+                      <input
+                        type="email"
+                        placeholder="you@gmail.com"
+                        value={customGoogleEmail}
+                        onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-purple-500 text-white font-medium transition-colors"
+                        required
+                        autoFocus
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Full Name (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="Your Name"
+                        value={customGoogleName}
+                        onChange={(e) => setCustomGoogleName(e.target.value)}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-purple-500 text-white font-medium transition-colors"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 bg-white hover:bg-neutral-200 text-black text-xs font-bold uppercase tracking-wider rounded-lg transition-colors cursor-pointer flex items-center justify-center space-x-2 mt-2"
+                    >
+                      <span>Continue with Google</span>
+                    </button>
+
+                    {savedAccounts.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomInput(false)}
+                        className="w-full text-center text-xs text-neutral-500 hover:text-neutral-300 pt-1 cursor-pointer block"
+                      >
+                        ← Back to saved accounts
+                      </button>
+                    )}
+                  </form>
                 )}
               </div>
             </motion.div>
