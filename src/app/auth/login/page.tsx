@@ -492,7 +492,7 @@ export default function LoginPage() {
                   <label className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 block mb-1">Your Google Email</label>
                   <input
                     type="email"
-                    placeholder="abhixin79@gmail.com"
+                    placeholder="user@gmail.com"
                     value={googleEmailInput}
                     onChange={(e) => setGoogleEmailInput(e.target.value)}
                     className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2.5 text-xs focus:outline-none focus:border-purple-500 text-white font-medium transition-colors"
